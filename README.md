@@ -1,2 +1,4 @@
 # GTSF Collection application
-![GTSF · 8 40am · 10-03](https://github.com/user-attachments/assets/232a5a13-66c6-4dff-97e5-c3f3c23862e6)
+
+<img width="5088" height="3292" alt="image" src="https://github.com/user-attachments/assets/76886708-c6f4-4be6-817a-05d54c332f63" />
+
