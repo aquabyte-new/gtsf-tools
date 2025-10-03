@@ -4,18 +4,22 @@
         cameraStageActive,
         sedationStageActive,
     } from "./lib/state.svelte.js";
+    import HHIcon from "./assets/hh-real.png";
+    import ActiveFish from "./lib/ActiveFish.svelte";
+    import { getUnusedFishIconIdx } from "./lib/fishIcon.svelte.js";
 
     function reset() {
-        stages.camera = null;
+        if (confirm("Are you sure you want to discard this fish?")) {
+            stages.camera = null;
+        }
     }
 
     function addFish() {
-        const ts = Date.now();
         stages.camera = {
-            cameraStartTime: ts,
-            fishId: String(ts).slice(-4),
+            cameraStartTime: Date.now(),
+            fishId: crypto.randomUUID().slice(0, 4),
+            iconIdx: getUnusedFishIconIdx(),
         };
-        console.log(stages.camera);
     }
 
     function toSedation() {
@@ -29,45 +33,58 @@
         stages.camera = null;
     }
 
-    const activeFish = $derived(stages.camera);
+    const iconIdx = $derived(stages.camera?.iconIdx);
 </script>
 
-<div>
+<div class="stage-container">
     <h2>Camera</h2>
+    <div class="icon-container">
+        <img class="icon-img" src={HHIcon} alt="hammerhead" />
+    </div>
 
     {#if cameraStageActive()}
-        <div>Current fish: {activeFish.fishId}</div>
+        <ActiveFish {iconIdx} />
+        <div class="button-container">
+            {#if sedationStageActive()}
+                <button class="stg-btn busy">Sedation busy</button>
+            {:else}
+                <button class="stg-btn move" onclick={toSedation}>To sedation</button>
+            {/if}
 
-        {#if sedationStageActive()}
             <div>
-                <button class="move-blocked">Sedation full</button>
+                <button class="stg-btn disgard" onclick={reset}>Reset</button>
             </div>
-        {:else}
-            <div>
-                <button class="move" onclick={toSedation}>To sedation</button>
-            </div>
-        {/if}
-
-        <div>
-            <button class="reset" onclick={reset}>Reset</button>
         </div>
     {:else}
-        <p class="waiting">Waiting for fish</p>
-        <button class="add" onclick={addFish}>Add fish</button>
+        <p class="waiting-msg">Waiting for fish</p>
+        <div class="button-container">
+            <button class="stg-btn add" onclick={addFish}>Add fish</button>
+        </div>
     {/if}
 </div>
 
 <style>
-    .reset {
-        background-color: #ff4444;
+    .stage-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
 
-    .waiting {
+    .button-container {
+        margin-top: auto;
+    }
+
+    .waiting-msg {
         color: #999;
         font-style: italic;
     }
 
-    .move-blocked {
-        background-color: #c6c6c6;
+    .icon-container {
+        width: 100%;
+        align-items: center;
+    }
+
+    .icon-img {
+        height: 70px;
     }
 </style>

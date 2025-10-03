@@ -1,69 +1,56 @@
 <script>
-  import { samplingInfo } from "./lib/state.svelte.js";
+  import { stages, samplingInfo, entries, clearAppState } from "./lib/state.svelte.js";
   import HistorySidebar from "./HistorySidebar.svelte";
   import StagesContainer from "./StagesContainer.svelte";
-  
-  const today = new Date().toISOString().slice(0, 10)
-  let editingPenId = $state(false);
+  import IntakeInfo from "./IntakeInfo.svelte";
+
+  // Persist session state
+  $effect(() => {
+    sessionStorage.setItem("entries", JSON.stringify(entries));
+    sessionStorage.setItem("samplingInfo", JSON.stringify(samplingInfo));
+    sessionStorage.setItem("stages", JSON.stringify(stages));
+  });
 </script>
 
 <main>
-  <div>
-    <h1>GTSF Collection</h1>
-    <h2>Pen ID: {samplingInfo.penId}</h2>
-  </div>
-
-  <div>
-    Today: {today}
-  </div>
-
-  <div>
-    <span>Pen ID: </span>
-    {#if editingPenId}
-      <input 
-        type="text" 
-        bind:value={samplingInfo.penId}
-        onblur={() => editingPenId = false}
-      />
-    {:else}
-      {samplingInfo.penId}
-      (<button class="edit-btn" onclick={() => editingPenId = true}>edit</button>)
-    {/if}
+  <div class="header">
+    <h1 class="header-title">GTSF Collection</h1>
+    <button class="clear-button" onclick={clearAppState}>Clear</button>
   </div>
 
   <div class="container">
-    <HistorySidebar />
+    <div class="left-sidebar">
+      <IntakeInfo />
+      <HistorySidebar />
+    </div>
     <StagesContainer />
   </div>
 </main>
-
 
 <style>
   .container {
     display: flex;
     flex-direction: row;
     gap: 2rem;
-    margin-top: 2rem;
   }
 
-  input[type="text"] {
-    padding: 0.25rem 0.25rem;
-    border: 1px solid #ccc;
-    width: 5rem;
+  .left-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: 14rem;
+    flex-shrink: 0;
+    border-right: 1px solid #e0e0e0;
+    padding-right: 1rem;
   }
-
-  .edit-btn {
-    width: fit-content;
-    padding: 0;
-    background: none;
-    border: none;
-    color: #4a90e2;
-    font-size: inherit;
-    cursor: pointer;
-    text-decoration: none;
+  
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
-
-  .edit-btn:hover {
-    text-decoration: underline;
+  
+  .header-title {
+    margin-right: 1rem;
   }
 </style>

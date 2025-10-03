@@ -4,6 +4,8 @@
     saveFish,
     measurementStageActive,
   } from "./lib/state.svelte.js";
+  import ActiveFish from "./lib/ActiveFish.svelte";
+  import BoardIcon from "./assets/measuring.png";
 
   const activeFish = $derived(stages.measurement);
 
@@ -14,6 +16,12 @@
     stages.measurement = null;
     return fishnum;
   }
+  
+  function discard() {
+    if (confirm("Are you sure you want to discard this fish?")) {
+      stages.measurement = null;
+    }
+  }
 
   // new stuff
   let weight = "";
@@ -22,15 +30,18 @@
   let breadth = "";
   let notes = "";
   let onSubmit;
+
+  const iconIdx = $derived(stages.measurement?.iconIdx);
 </script>
 
-<div>
-  <h2>Measurements</h2>
+<div class="stage-container">
+  <h2>Measurement</h2>
+  <div class="icon-container">
+    <img class="icon-img" src={BoardIcon} alt="measuring icon" />
+  </div>
+
   {#if measurementStageActive()}
-    <div>Current fish: {activeFish.fishId}</div>
-    <div>
-      <button class="move" onclick={log}>Submit and release</button>
-    </div>
+    <ActiveFish {iconIdx} />
 
     <h3>Data entry</h3>
     <form>
@@ -83,19 +94,36 @@
         placeholder="Add any notes on welfare or sampling here"
       />
     </form>
+
+    <div class="button-container">
+      <button class="stg-btn move" onclick={log}>Submit and release</button>
+      <button class="stg-btn disgard" onclick={discard}>Discard</button>
+    </div>
   {:else}
     <p class="waiting">Waiting for fish</p>
   {/if}
 </div>
 
 <style>
+  .stage-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .button-container {
+    margin-top: auto;
+  }
+
   .reset {
     background-color: #ff4444;
   }
+
   .waiting {
     color: #999;
     font-style: italic;
   }
+
   .form-group {
     margin-bottom: 0.5rem;
   }
@@ -103,5 +131,9 @@
   .notes {
     width: 100%;
     height: 4rem;
+  }
+
+  .icon-img {
+    height: 70px;
   }
 </style>

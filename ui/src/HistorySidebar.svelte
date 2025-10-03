@@ -3,13 +3,13 @@
 </script>
 
 <div class="sidebar">
-  <h2>History</h2>
+  <h3>History</h3>
   {#if entries.length > 0}
     <div>
     Total fish: {entries.length}
     </div>
     <div class="history-list">
-      {#each entries as fish}
+      {#each entries.slice().reverse() as fish}
         <div class="history-item">
           <div class="history-detail">
             <strong>Fish {fish.fishId}</strong>
@@ -26,16 +26,22 @@
 </div>
 
 <style>
+  h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+  
   .sidebar {
-    width: 250px;
-    border-right: 1px solid #e0e0e0;
-    padding-right: 1.5rem;
+    display: flex;
+    flex-direction: column;
   }
   
   .history-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-height: calc(100vh - 380px);
+    overflow-y: auto;
   }
   
   .history-item {

@@ -1,30 +1,52 @@
 <script>
-    import { stages, sedationStageActive, measurementStageActive } from './lib/state.svelte.js';
-    
+    import {
+        stages,
+        sedationStageActive,
+        measurementStageActive,
+    } from "./lib/state.svelte.js";
+    import ActiveFish from "./lib/ActiveFish.svelte";
+    import BinIcon from "./assets/bin.png";
+
     function toMeasurement() {
         const fish = stages.sedation;
-        fish.sedationEndTime = Date.now()
+        fish.sedationEndTime = Date.now();
         stages.measurement = fish;
         stages.sedation = null;
     }
+    
+    function discard() {
+        if (confirm("Are you sure you want to discard this fish?")) {
+            stages.sedation = null;
+        }
+    }
+
+    const iconIdx = $derived(stages.sedation?.iconIdx);
 </script>
 
-<div>
+<div class="stage-container">
     <h2>Sedation</h2>
+    <div class="icon-container">
+        <img class="icon-img" src={BinIcon} alt="sedation bin" />
+    </div>
+
     {#if sedationStageActive()}
-        <div>Current fish: {stages.sedation.fishId}</div>
-        
-        {#if measurementStageActive()}
+        <ActiveFish {iconIdx} />
+
+        <div class="button-container">
+            {#if measurementStageActive()}
+                <div>
+                    <button class="stg-btn busy">Measurement full</button>
+                </div>
+            {:else}
+                <div>
+                    <button class="stg-btn move" onclick={toMeasurement}
+                        >To measurement</button
+                    >
+                </div>
+            {/if}
             <div>
-                <button class="move-blocked">Measurement full</button>
+                <button class="stg-btn disgard" onclick={discard}>Discard</button>
             </div>
-        {:else}
-            <div>
-                <button class="move" onclick={toMeasurement}>To measurement</button>
-            </div>
-        {/if}
-        <div>
-            <button class="reset">Reset timer</button>
         </div>
     {:else}
         <p class="waiting">Waiting for fish</p>
@@ -32,16 +54,20 @@
 </div>
 
 <style>
-    .reset {
-        background-color: #ff4444;
+    .stage-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
-    
+
+    .button-container {
+        margin-top: auto;
+    }
+
     .waiting {
         color: #999;
         font-style: italic;
     }
-    
-    .move-blocked {
-        background-color: #c6c6c6;
-    }
+
+
 </style>
