@@ -1,0 +1,18 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  margin-left: 4rem;
+  margin-right: 2rem;
+  margin-top: 2rem;
+}
+
+h2 {
+  margin-top: 0;
+}
+
+button {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
