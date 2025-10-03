@@ -1,5 +1,6 @@
 <script>
   import FishIcon from "./lib/FishIcon.svelte";
+  import { samplingInfo } from "./lib/state.svelte.js";
 
   let { fish = null, onClose } = $props();
 
@@ -47,6 +48,10 @@
             <span class="label">Fish ID:</span>
             <span class="value">{fish.fishId}</span>
           </div>
+          <div class="detail-row">
+            <span class="label">Species:</span>
+            <span class="value">{samplingInfo.species}</span>
+          </div>
         </div>
 
         <div class="detail-section">
@@ -80,20 +85,20 @@
             <span class="value">{formatTimestamp(fish.cameraEndTime)}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Camera Duration:</span>
-            <span class="value">{formatDuration(fish.cameraStartTime, fish.cameraEndTime)}</span>
-          </div>
-          <div class="detail-row">
             <span class="label">Sedation End:</span>
             <span class="value">{formatTimestamp(fish.sedationEndTime)}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Sedation Duration:</span>
-            <span class="value">{formatDuration(fish.cameraEndTime, fish.sedationEndTime)}</span>
-          </div>
-          <div class="detail-row">
             <span class="label">Measurement End:</span>
             <span class="value">{formatTimestamp(fish.measurementEndTime)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Camera Duration:</span>
+            <span class="value">{formatDuration(fish.cameraStartTime, fish.cameraEndTime)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Sedation Duration:</span>
+            <span class="value">{formatDuration(fish.cameraEndTime, fish.sedationEndTime)}</span>
           </div>
           <div class="detail-row">
             <span class="label">Measurement Duration:</span>

@@ -5,7 +5,7 @@
     measurementStageActive,
   } from "./lib/state.svelte.js";
   import ActiveFish from "./lib/ActiveFish.svelte";
-  import BoardIcon from "./assets/measuring.png";
+  import BoardIcon from "./assets/measuring-icon-2.png";
 
   const activeFish = $derived(stages.measurement);
 
@@ -24,14 +24,27 @@
   }
 
   // new stuff
-  let weight = "";
-  let length = "";
-  let width = "";
-  let breadth = "";
-  let notes = "";
+  let weight = $state("");
+  let length = $state("");
+  let width = $state("");
+  let breadth = $state("");
+  let notes = $state("");
   let onSubmit;
 
   const iconIdx = $derived(stages.measurement?.iconIdx);
+
+  // Validation
+  const isWeightValid = $derived(() => {
+    const w = Number(weight);
+    return weight !== "" && !isNaN(w) && w >= 10 && w <= 15000;
+  });
+
+  const isLengthValid = $derived(() => {
+    const l = Number(length);
+    return length !== "" && !isNaN(l) && l >= 10 && l <= 2000;
+  });
+
+  const canSubmit = $derived(isWeightValid() && isLengthValid());
 </script>
 
 <div class="stage-container">
@@ -53,6 +66,7 @@
           bind:value={weight}
           step="1"
           placeholder="weight in grams"
+          class:invalid={weight !== "" && !isWeightValid()}
         />
       </div>
       <div class="form-group">
@@ -63,6 +77,7 @@
           bind:value={length}
           step="1"
           placeholder="length in mm"
+          class:invalid={length !== "" && !isLengthValid()}
         />
       </div>
       <div class="form-group">
@@ -86,17 +101,16 @@
         />
       </div>
       <p>Notes</p>
-      <input
+      <textarea
         class="notes"
-        type="text"
         id="notes"
         bind:value={notes}
         placeholder="Add any notes on welfare or sampling here"
-      />
+      ></textarea>
     </form>
 
     <div class="button-container">
-      <button class="stg-btn move" onclick={log}>Submit and release</button>
+      <button class="stg-btn move" onclick={log} disabled={!canSubmit}>Submit and release</button>
       <button class="stg-btn disgard" onclick={discard}>Discard</button>
     </div>
   {:else}
@@ -115,25 +129,39 @@
     margin-top: auto;
   }
 
-  .reset {
-    background-color: #ff4444;
-  }
-
   .waiting {
     color: #999;
     font-style: italic;
   }
 
   .form-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.5rem;
+    gap: 1rem;
+  }
+
+  .form-group label {
+    text-align: left;
+  }
+
+  .form-group input {
+    text-align: right;
+    font-size: 1rem;
+    padding: 0.2rem;
+    width: 10rem;
+    border: 2px solid #ccc;
+  }
+
+  .form-group input.invalid {
+    border-color: #ff4444;
   }
 
   .notes {
     width: 100%;
     height: 4rem;
-  }
-
-  .icon-img {
-    height: 70px;
+    vertical-align: top;
+    resize: vertical;
   }
 </style>

@@ -23,7 +23,7 @@
   <h3>History</h3>
   {#if entries.length > 0}
     <div>
-    Total fish: {entries.length}
+      Total fish: {entries.length}
     </div>
     <div class="history-list">
       {#each entries.slice().reverse() as fish, index}
@@ -31,14 +31,8 @@
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div class="history-item" onclick={() => openFishDetail(fish)}>
           <div class="history-header">
-            <FishIcon usePlain={true} />
+            <FishIcon iconIdx={fish.iconIdx} />
             <strong>Fish {entries.length - index}</strong>
-          </div>
-          <div class="history-detail">
-            {formatTimestamp(fish.cameraStartTime)}
-          </div>
-          <div class="history-detail">
-            Weight: {fish.weight ?? "nan"}
           </div>
         </div>
       {/each}
@@ -62,6 +56,7 @@
   }
   
   .history-list {
+    margin-top: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -70,7 +65,9 @@
   }
   
   .history-item {
-    padding: 0.75rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    padding-left: 1rem;
     background-color: #f8f9fa;
     border-radius: 4px;
     border: 1px solid #e0e0e0;
@@ -87,7 +84,6 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
   }
 
   .history-header strong {

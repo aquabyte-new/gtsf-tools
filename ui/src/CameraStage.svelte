@@ -4,8 +4,9 @@
         cameraStageActive,
         sedationStageActive,
     } from "./lib/state.svelte.js";
-    import HHIcon from "./assets/hh-real.png";
+    import HHIcon from "./assets/hh-icon-2.png";
     import ActiveFish from "./lib/ActiveFish.svelte";
+    import Timer from "./lib/Timer.svelte";
     import { getUnusedFishIconIdx } from "./lib/fishIcon.svelte.js";
 
     function reset() {
@@ -37,13 +38,16 @@
 </script>
 
 <div class="stage-container">
-    <h2>Camera</h2>
+    <h2>Imaging</h2>
     <div class="icon-container">
         <img class="icon-img" src={HHIcon} alt="hammerhead" />
     </div>
 
     {#if cameraStageActive()}
         <ActiveFish {iconIdx} />
+        <div class="timer-container">
+            <Timer startTime={stages.camera.cameraStartTime} />
+        </div>
         <div class="button-container">
             {#if sedationStageActive()}
                 <button class="stg-btn busy">Sedation busy</button>
@@ -84,7 +88,8 @@
         align-items: center;
     }
 
-    .icon-img {
-        height: 70px;
+    .timer-container {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
     }
 </style>

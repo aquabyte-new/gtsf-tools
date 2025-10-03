@@ -5,7 +5,8 @@
         measurementStageActive,
     } from "./lib/state.svelte.js";
     import ActiveFish from "./lib/ActiveFish.svelte";
-    import BinIcon from "./assets/bin.png";
+    import Timer from "./lib/Timer.svelte";
+    import BinIcon from "./assets/bin-icon.png";
 
     function toMeasurement() {
         const fish = stages.sedation;
@@ -31,11 +32,14 @@
 
     {#if sedationStageActive()}
         <ActiveFish {iconIdx} />
+        <div class="timer-container">
+            <Timer startTime={stages.sedation.cameraEndTime} />
+        </div>
 
         <div class="button-container">
             {#if measurementStageActive()}
                 <div>
-                    <button class="stg-btn busy">Measurement full</button>
+                    <button class="stg-btn busy">Measurement busy</button>
                 </div>
             {:else}
                 <div>
@@ -69,5 +73,9 @@
         font-style: italic;
     }
 
+    .timer-container {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
 
 </style>
