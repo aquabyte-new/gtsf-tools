@@ -1,5 +1,22 @@
 <script>
   import { entries } from './lib/state.svelte.js';
+  import FishIcon from './lib/FishIcon.svelte';
+  import FishDetailModal from './FishDetailModal.svelte';
+
+  let selectedFish = $state(null);
+
+  function formatTimestamp(timestamp) {
+    if (!timestamp) return "N/A";
+    return new Date(timestamp).toLocaleString();
+  }
+
+  function openFishDetail(fish) {
+    selectedFish = fish;
+  }
+
+  function closeModal() {
+    selectedFish = null;
+  }
 </script>
 
 <div class="sidebar">
@@ -9,13 +26,19 @@
     Total fish: {entries.length}
     </div>
     <div class="history-list">
-      {#each entries.slice().reverse() as fish}
-        <div class="history-item">
-          <div class="history-detail">
-            <strong>Fish {fish.fishId}</strong>
+      {#each entries.slice().reverse() as fish, index}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="history-item" onclick={() => openFishDetail(fish)}>
+          <div class="history-header">
+            <FishIcon usePlain={true} />
+            <strong>Fish {entries.length - index}</strong>
           </div>
-          <div class="history-timestamp">
-            {fish.cameraStartTime}
+          <div class="history-detail">
+            {formatTimestamp(fish.cameraStartTime)}
+          </div>
+          <div class="history-detail">
+            Weight: {fish.weight ?? "nan"}
           </div>
         </div>
       {/each}
@@ -24,6 +47,8 @@
     <p class="empty-message">No submissions yet</p>
   {/if}
 </div>
+
+<FishDetailModal fish={selectedFish} onClose={closeModal} />
 
 <style>
   h3 {
@@ -39,7 +64,7 @@
   .history-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     max-height: calc(100vh - 380px);
     overflow-y: auto;
   }
@@ -49,21 +74,31 @@
     background-color: #f8f9fa;
     border-radius: 4px;
     border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .history-item:hover {
+    background-color: #e9ecef;
+    border-color: #999;
+  }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .history-header strong {
+    font-size: 0.95rem;
+    color: #333;
   }
   
   .history-detail {
+    font-size: 0.85rem;
+    color: #666;
     margin-bottom: 0.25rem;
-    font-size: 0.95rem;
-  }
-  
-  .history-detail strong {
-    color: #555;
-  }
-  
-  .history-timestamp {
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    color: #888;
   }
   
   .empty-message {
