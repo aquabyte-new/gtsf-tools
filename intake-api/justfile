@@ -1,0 +1,26 @@
+# Display commands
+@help:
+	just --list
+
+
+# Set up repo
+@init:
+  uv sync
+
+
+# Dev server
+@serve-dev:
+  echo "Not build yet, choose one of"
+  echo ' 1) use `uv run fastapi`'
+  echo ' 2) use `uv run uvicorn main:app'
+
+
+# Release backend code to production server
+@release:
+  rsync -avz \
+    --delete \
+    --exclude=__pycache__ \
+    --exclude=.DS_Store \
+    --exclude=.venv \
+    backend/ \
+    tools:~/gtsf-backend

@@ -1,0 +1,27 @@
+# Display commands
+@help:
+	just --list
+
+
+# Set up repo
+@init:
+	echo "No setup tooling yet"
+
+
+# Dev server
+@serve:
+	bun run dev
+
+
+# Build production site
+@build:
+	bun run build
+
+
+# Release static site production
+@release: build
+  rsync -avz \
+    --delete \
+    --exclude=.DS_Store \
+    ui/dist/ \
+    tools:~/gtsf-ui
