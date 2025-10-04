@@ -83,7 +83,7 @@
   .save-btn {
     margin-left: 1rem;
     cursor: pointer;
-    background-color: #90ee90;
+    background-color: #2b9cff;
     border: 1px solid #e0e0e0;
     border-radius: 0rem;
   }

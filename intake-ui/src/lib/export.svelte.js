@@ -2,6 +2,7 @@ import { entries, samplingInfo } from "./state.svelte.js";
 
 
 const columns = [
+    "id",
     'penId',
     'species',
     'location',
@@ -25,6 +26,7 @@ const columnMap = {
     "cameraEndTime": "intakeEnd",
     "sedationEndTime": "sedationEnd",
     "measurementEndTime": "measurementEnd",
+    "id": "fishId",
 }
 
 // Helper to escape CSV values

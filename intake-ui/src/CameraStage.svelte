@@ -8,6 +8,7 @@
     import ActiveFish from "./lib/ActiveFish.svelte";
     import Timer from "./lib/Timer.svelte";
     import { getUnusedFishIconIdx } from "./lib/fishIcon.svelte.js";
+    import { generateID } from "./lib/utils.js";
 
     function reset() {
         if (confirm("Are you sure you want to discard this fish?")) {
@@ -18,6 +19,7 @@
     function addFish() {
         stages.camera = {
             cameraStartTime: Date.now(),
+            id: generateID(),
             iconIdx: getUnusedFishIconIdx(),
         };
     }

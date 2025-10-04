@@ -50,6 +50,10 @@
         <div class="detail-section">
           <h3>Identity</h3>
           <div class="detail-row">
+            <span class="label">Fish ID:</span>
+            <span class="value">{fish.id}</span>
+          </div>
+          <div class="detail-row">
             <span class="label">Species:</span>
             <span class="value">{samplingInfo.species}</span>
           </div>
