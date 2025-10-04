@@ -5,22 +5,37 @@
     measurementStageActive,
   } from "./lib/state.svelte.js";
   import ActiveFish from "./lib/ActiveFish.svelte";
-  import BoardIcon from "./assets/measuring-icon-2.png";
+  import BoardIcon from "./assets/measuring-icon-2.jpeg";
 
   const activeFish = $derived(stages.measurement);
 
   // submit entry and release fish
   function log() {
     stages.measurement.measurementEndTime = Date.now();
-    const fishnum = saveFish(stages.measurement, 200);
+    stages.measurement.weight = weight;
+    stages.measurement.length = length;
+    stages.measurement.width = width;
+    stages.measurement.breadth = breadth;
+    stages.measurement.notes = notes;
+    const fishnum = saveFish(stages.measurement);
     stages.measurement = null;
+    resetForm();
     return fishnum;
   }
   
   function discard() {
     if (confirm("Are you sure you want to discard this fish?")) {
       stages.measurement = null;
+      resetForm();
     }
+  }
+
+  function resetForm() {
+    weight = "";
+    length = "";
+    width = "";
+    breadth = "";
+    notes = "";
   }
 
   // new stuff
@@ -29,7 +44,6 @@
   let width = $state("");
   let breadth = $state("");
   let notes = $state("");
-  let onSubmit;
 
   const iconIdx = $derived(stages.measurement?.iconIdx);
 

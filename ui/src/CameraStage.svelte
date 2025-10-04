@@ -4,7 +4,7 @@
         cameraStageActive,
         sedationStageActive,
     } from "./lib/state.svelte.js";
-    import HHIcon from "./assets/hh-icon-2.png";
+    import HHIcon from "./assets/hh-icon-2.jpeg";
     import ActiveFish from "./lib/ActiveFish.svelte";
     import Timer from "./lib/Timer.svelte";
     import { getUnusedFishIconIdx } from "./lib/fishIcon.svelte.js";
@@ -18,7 +18,6 @@
     function addFish() {
         stages.camera = {
             cameraStartTime: Date.now(),
-            fishId: crypto.randomUUID().slice(0, 4),
             iconIdx: getUnusedFishIconIdx(),
         };
     }

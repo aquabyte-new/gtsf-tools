@@ -18,6 +18,11 @@
     return `${minutes}m ${remainingSeconds}s`;
   }
 
+  function formatTime(timestamp) {
+    if (!timestamp) return "N/A";
+    return new Date(timestamp).toLocaleTimeString();
+  }
+
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) {
       onClose();
@@ -38,16 +43,12 @@
       <div class="modal-body">
         <div class="detail-section">
           <div class="fish-icon-display">
-            <FishIcon iconIdx={fish.iconIdx} />
+            <FishIcon iconIdx={fish.iconIdx} size="4rem" />
           </div>
         </div>
 
         <div class="detail-section">
           <h3>Identity</h3>
-          <div class="detail-row">
-            <span class="label">Fish ID:</span>
-            <span class="value">{fish.fishId}</span>
-          </div>
           <div class="detail-row">
             <span class="label">Species:</span>
             <span class="value">{samplingInfo.species}</span>
@@ -76,33 +77,34 @@
 
         <div class="detail-section">
           <h3>Timeline</h3>
-          <div class="detail-row">
-            <span class="label">Camera Start:</span>
-            <span class="value">{formatTimestamp(fish.cameraStartTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Camera End:</span>
-            <span class="value">{formatTimestamp(fish.cameraEndTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Sedation End:</span>
-            <span class="value">{formatTimestamp(fish.sedationEndTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Measurement End:</span>
-            <span class="value">{formatTimestamp(fish.measurementEndTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Camera Duration:</span>
-            <span class="value">{formatDuration(fish.cameraStartTime, fish.cameraEndTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Sedation Duration:</span>
-            <span class="value">{formatDuration(fish.cameraEndTime, fish.sedationEndTime)}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Measurement Duration:</span>
-            <span class="value">{formatDuration(fish.sedationEndTime, fish.measurementEndTime)}</span>
+          <div class="timeline">
+            <div class="timeline-labels">
+              <div class="stage-label">
+                <span class="label-name">Camera</span>
+                <span class="label-duration">{formatDuration(fish.cameraStartTime, fish.cameraEndTime)}</span>
+              </div>
+              <div class="stage-label">
+                <span class="label-name">Sedation</span>
+                <span class="label-duration">{formatDuration(fish.cameraEndTime, fish.sedationEndTime)}</span>
+              </div>
+              <div class="stage-label">
+                <span class="label-name">Measurement</span>
+                <span class="label-duration">{formatDuration(fish.sedationEndTime, fish.measurementEndTime)}</span>
+              </div>
+            </div>
+            
+            <div class="timeline-bar">
+              <div class="timeline-segment camera"></div>
+              <div class="timeline-segment sedation"></div>
+              <div class="timeline-segment measurement"></div>
+            </div>
+            
+            <div class="timeline-times">
+              <span class="time-marker">{formatTime(fish.cameraStartTime)}</span>
+              <span class="time-marker">{formatTime(fish.cameraEndTime)}</span>
+              <span class="time-marker">{formatTime(fish.sedationEndTime)}</span>
+              <span class="time-marker">{formatTime(fish.measurementEndTime)}</span>
+            </div>
           </div>
         </div>
 
@@ -216,7 +218,75 @@
   .fish-icon-display {
     display: flex;
     justify-content: center;
-    padding: 1rem 0;
+  }
+
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .stage-label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .label-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  .label-duration {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .timeline-bar {
+    display: flex;
+    height: 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+
+  .timeline-segment {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .timeline-segment.camera {
+    background-color: #90caf9;
+  }
+
+  .timeline-segment.sedation {
+    background-color: #ffb74d;
+  }
+
+  .timeline-segment.measurement {
+    background-color: #81c784;
+  }
+
+  .timeline-times {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .time-marker {
+    font-size: 0.8rem;
+    color: #666;
+    font-family: monospace;
   }
 </style>
 

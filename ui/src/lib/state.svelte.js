@@ -50,10 +50,15 @@ export function measurementStageActive() {
     return stages.measurement !== null;
 }
 
-export function saveFish(fish, weight) {
-    if (weight === null || weight < 0) { return null; }
+export function saveFish(fish) {
+    // Validate required fields
+    if (!fish.weight || fish.weight < 10 || fish.weight > 15000) {
+        return null;
+    }
+    if (!fish.length || fish.length < 10 || fish.length > 2000) {
+        return null;
+    }
 
-    fish.weight = weight;
     entries.push(fish);
     return entries.length;
 }
@@ -63,6 +68,8 @@ export function clearAppState() {
 
     // Reset state (assign defaults to current state objects)
     Object.assign(stages, { ...defaultStages });
-    Object.assign(samplingInfo, { ...defaultSamplingInfo });
     entries.splice(0, entries.length);
+
+    // Don't reset sampling info for now, feels convenient to keep it
+    // Object.assign(samplingInfo, { ...defaultSamplingInfo });
 }

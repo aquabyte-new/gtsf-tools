@@ -1,8 +1,14 @@
 <script>
-  import { stages, samplingInfo, entries, clearAppState } from "./lib/state.svelte.js";
+  import {
+    stages,
+    samplingInfo,
+    entries,
+    clearAppState,
+  } from "./lib/state.svelte.js";
   import HistorySidebar from "./HistorySidebar.svelte";
   import StagesContainer from "./StagesContainer.svelte";
   import IntakeInfo from "./IntakeInfo.svelte";
+  import { exportCSV, saveToBackend } from "./lib/export.svelte.js";
 
   // Persist session state
   $effect(() => {
@@ -10,12 +16,20 @@
     sessionStorage.setItem("samplingInfo", JSON.stringify(samplingInfo));
     sessionStorage.setItem("stages", JSON.stringify(stages));
   });
+  
+  function clear() {
+    if (confirm("Are you sure you want to delete all data?")) {
+      clearAppState();
+    }
+  }
 </script>
 
 <main>
   <div class="header">
     <h1 class="header-title">GTSF Collection</h1>
-    <button class="clear-button" onclick={clearAppState}>Clear</button>
+    <button class="export-btn" onclick={exportCSV}>Export</button>
+    <button class="save-btn" onclick={saveToBackend}>Save</button>
+    <button class="clear-btn" onclick={clear}>Delete all</button>
   </div>
 
   <div class="container">
@@ -43,14 +57,34 @@
     border-right: 1px solid #e0e0e0;
     padding-right: 1rem;
   }
-  
+
   .header {
     display: flex;
     flex-direction: row;
     align-items: center;
   }
-  
-  .header-title {
-    margin-right: 1rem;
+
+  .clear-btn {
+    margin-left: 1rem;
+    cursor: pointer;
+    background-color: #ff7575;
+    border: 1px solid;
+    border-radius: 0rem;
+  }
+
+  .export-btn {
+    margin-left: 2rem;
+    cursor: pointer;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 0rem;
+  }
+
+  .save-btn {
+    margin-left: 1rem;
+    cursor: pointer;
+    background-color: #90ee90;
+    border: 1px solid #e0e0e0;
+    border-radius: 0rem;
   }
 </style>

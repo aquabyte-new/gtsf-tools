@@ -6,7 +6,7 @@
     } from "./lib/state.svelte.js";
     import ActiveFish from "./lib/ActiveFish.svelte";
     import Timer from "./lib/Timer.svelte";
-    import BinIcon from "./assets/bin-icon.png";
+    import BinIcon from "./assets/bin-icon.jpeg";
 
     function toMeasurement() {
         const fish = stages.sedation;
