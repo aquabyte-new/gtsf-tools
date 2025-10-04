@@ -1,6 +1,5 @@
-# GTSF Collection application
-
-<img width="2506" height="1680" alt="Capture-2025-10-03-224107" src="https://github.com/user-attachments/assets/93de4efb-c8c8-46c1-bb75-0053882f8e57" />
+# GTSF Tools
+A collection of tools to help with GTSF intake in the field.
 
 # Apps
 ```
