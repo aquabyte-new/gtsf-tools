@@ -1,6 +1,7 @@
 # GTSF Collection application
 
-<img width="5088" height="3292" alt="image" src="https://github.com/user-attachments/assets/76886708-c6f4-4be6-817a-05d54c332f63" />
+<img width="2506" height="1680" alt="Capture-2025-10-03-224107" src="https://github.com/user-attachments/assets/93de4efb-c8c8-46c1-bb75-0053882f8e57" />
+
 
 # Deployment
 Runs on EC2.
