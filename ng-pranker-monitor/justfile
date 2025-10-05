@@ -1,0 +1,9 @@
+# Display commands
+@help:
+    just --list
+
+
+# Set up repo
+@init:
+    echo "3.8" > .python-version
+    uv sync
