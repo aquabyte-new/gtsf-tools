@@ -22,6 +22,7 @@ export const entries = $state(loadEntries());
 
 // Sampling info state.
 const defaultSamplingInfo = {
+    name: 'Untitled',
     penId: '880',
     species: 'atlantic_salmon',
     location: 'bergen_workshop',
@@ -51,16 +52,7 @@ export function measurementStageActive() {
 }
 
 export function saveFish(fish) {
-    // Validate required fields
-    if (!fish.weight || fish.weight < 10 || fish.weight > 15000) {
-        return null;
-    }
-    if (!fish.length || fish.length < 10 || fish.length > 2000) {
-        return null;
-    }
-
     entries.push(fish);
-    return entries.length;
 }
 
 export function clearAppState() {
@@ -70,6 +62,7 @@ export function clearAppState() {
     Object.assign(stages, { ...defaultStages });
     entries.splice(0, entries.length);
 
-    // Don't reset sampling info for now, feels convenient to keep it
-    // Object.assign(samplingInfo, { ...defaultSamplingInfo });
+    // Only reset some of the sampling info.
+    samplingInfo.name = defaultSamplingInfo.name;
+    samplingInfo.notes = defaultSamplingInfo.notes;
 }

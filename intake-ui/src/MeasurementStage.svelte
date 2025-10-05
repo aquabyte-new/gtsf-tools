@@ -4,25 +4,48 @@
     saveFish,
     measurementStageActive,
   } from "./lib/state.svelte.js";
+  import {
+    isWeightValid,
+    isLengthValid,
+    isWidthValid,
+    isBreadthValid,
+  } from "./lib/validation.js";
   import ActiveFish from "./lib/ActiveFish.svelte";
   import BoardIcon from "./assets/measuring-icon-2.jpeg";
 
   const activeFish = $derived(stages.measurement);
 
+  // Form state.
+  let weight = $state("");
+  let length = $state("");
+  let width = $state("");
+  let breadth = $state("");
+  let notes = $state("");
+
   // submit entry and release fish
   function log() {
-    stages.measurement.measurementEndTime = Date.now();
-    stages.measurement.weight = weight;
-    stages.measurement.length = length;
-    stages.measurement.width = width;
-    stages.measurement.breadth = breadth;
-    stages.measurement.notes = notes;
-    const fishnum = saveFish(stages.measurement);
+    const check = (msg) => confirm(msg + ", are you sure you want to submit?");
+    if (!isWeightValid(weight) && !check("Weight is unusual")) return;
+    if (!isLengthValid(weight, length) && !check("Length is ususual")) return;
+    if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
+    if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual")) return;
+    
+    stages.measurement = {
+      ...stages.measurement,
+      measurementEndTime: Date.now(),
+      weight: weight,
+      length: length,
+      width: width,
+      breadth: breadth,
+      notes: notes,
+    };
+
+    saveFish(stages.measurement);
     stages.measurement = null;
+
     resetForm();
-    return fishnum;
   }
-  
+
   function discard() {
     if (confirm("Are you sure you want to discard this fish?")) {
       stages.measurement = null;
@@ -38,27 +61,15 @@
     notes = "";
   }
 
-  // new stuff
-  let weight = $state("");
-  let length = $state("");
-  let width = $state("");
-  let breadth = $state("");
-  let notes = $state("");
-
   const iconIdx = $derived(stages.measurement?.iconIdx);
 
-  // Validation
-  const isWeightValid = $derived(() => {
-    const w = Number(weight);
-    return weight !== "" && !isNaN(w) && w >= 10 && w <= 15000;
-  });
-
-  const isLengthValid = $derived(() => {
-    const l = Number(length);
-    return length !== "" && !isNaN(l) && l >= 10 && l <= 2000;
-  });
-
-  const canSubmit = $derived(isWeightValid() && isLengthValid());
+  // Minimal validations before submitting.
+  function isPosNum(x) {
+    return x !== "" && !isNaN(x) && x > 0;
+  }
+  const weightOk = $derived(isPosNum(weight));
+  const lengthOk = $derived(isPosNum(length));
+  const canSubmit = $derived(weightOk && lengthOk);
 </script>
 
 <div class="stage-container">
@@ -73,25 +84,25 @@
     <h3>Data entry</h3>
     <form>
       <div class="form-group">
-        <label for="weight">Weight:</label>
+        <label for="weight">Weight:*</label>
         <input
           type="number"
           id="weight"
           bind:value={weight}
           step="1"
-          placeholder="weight in grams"
-          class:invalid={weight !== "" && !isWeightValid()}
+          placeholder="grams"
+          class:invalid={!weightOk}
         />
       </div>
       <div class="form-group">
-        <label for="length">Length:</label>
+        <label for="length">Length:*</label>
         <input
           type="number"
           id="length"
           bind:value={length}
           step="1"
-          placeholder="length in mm"
-          class:invalid={length !== "" && !isLengthValid()}
+          placeholder="mm"
+          class:invalid={!lengthOk}
         />
       </div>
       <div class="form-group">
@@ -101,7 +112,7 @@
           id="length"
           bind:value={width}
           step="1"
-          placeholder="width in mm"
+          placeholder="mm"
         />
       </div>
       <div class="form-group">
@@ -111,7 +122,7 @@
           id="length"
           bind:value={breadth}
           step="1"
-          placeholder="breadth in mm"
+          placeholder="mm"
         />
       </div>
       <p>Notes</p>
@@ -124,7 +135,9 @@
     </form>
 
     <div class="button-container">
-      <button class="stg-btn move" onclick={log} disabled={!canSubmit}>Submit and release</button>
+      <button class="stg-btn move" onclick={log} disabled={!canSubmit}
+        >Submit and release</button
+      >
       <button class="stg-btn disgard" onclick={discard}>Discard</button>
     </div>
   {:else}
@@ -165,7 +178,7 @@
     font-size: 1rem;
     padding: 0.2rem;
     width: 10rem;
-    border: 2px solid #ccc;
+    border: 1px solid #000000;
   }
 
   .form-group input.invalid {

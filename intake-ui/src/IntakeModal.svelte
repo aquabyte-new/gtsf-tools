@@ -31,6 +31,11 @@
             }}
         >
             <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" bind:value={samplingInfo.name} />
+            </div>
+
+            <div class="form-group">
                 <label for="penId">Pen ID:</label>
                 <input type="text" id="penId" bind:value={samplingInfo.penId} />
             </div>

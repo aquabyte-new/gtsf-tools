@@ -4,6 +4,7 @@
     samplingInfo,
     entries,
     clearAppState,
+    measurementStageActive,
   } from "./lib/state.svelte.js";
   import HistorySidebar from "./HistorySidebar.svelte";
   import StagesContainer from "./StagesContainer.svelte";
@@ -25,6 +26,10 @@
 </script>
 
 <main>
+  {#if import.meta.env.DEV}
+    <div class="dev-banner">DEVELOPMENT MODE</div>
+  {/if}
+
   <div class="header">
     <h1 class="header-title">GTSF Collection</h1>
     <button class="export-btn" onclick={exportCSV}>Export</button>
@@ -86,5 +91,14 @@
     background-color: #2b9cff;
     border: 1px solid #e0e0e0;
     border-radius: 0rem;
+  }
+  
+  .dev-banner {
+    background-color: #ffa7a7;
+    color: rgb(0, 0, 0);
+    padding: 0.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    margin: 0rem;
   }
 </style>

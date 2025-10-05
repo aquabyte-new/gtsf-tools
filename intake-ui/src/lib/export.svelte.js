@@ -1,5 +1,8 @@
 import { entries, samplingInfo } from "./state.svelte.js";
 
+// This is configured in .env.development and .env.production
+const apiUrl = import.meta.env.VITE_API_URL;
+
 
 const columns = [
     "id",
@@ -47,7 +50,7 @@ function toCSV() {
 
     const header = columns.map(col => columnMap[col] || col).join(',');
     const rows = entries.map((entry) => {
-        const fullEntry = { 
+        const fullEntry = {
             ...entry,
             penId: samplingInfo.penId,
             location: samplingInfo.location,
@@ -96,11 +99,9 @@ export async function saveToBackend() {
     }));
 
     try {
-        const response = await fetch('http://52.30.78.25:8000/save', {
+        const response = await fetch(`${apiUrl}/save`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(fish),
         });
 

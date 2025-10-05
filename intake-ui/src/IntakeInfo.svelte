@@ -19,11 +19,12 @@
 
 <div class="intake-info">
     <div class="intake-info-header">
-        <h3 class="font-bold">Intake Info</h3>
+        <h3 class="font-bold">Metadata</h3>
         <span class="edit-btn-container">
             (<button class="edit-btn" onclick={() => showModal = true}>edit</button>)
         </span>
     </div>
+    <div><i>Name</i>: {samplingInfo.name}</div>
     <div><i>Pen ID</i>: {samplingInfo.penId}</div>
     <div><i>Species</i>: {formatSpecies(samplingInfo.species)}</div>
     <div><i>Location</i>: {samplingInfo.location}</div>
