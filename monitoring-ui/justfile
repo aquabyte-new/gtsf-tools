@@ -1,0 +1,18 @@
+# Display commands
+@help:
+	just --list
+
+
+# Set up repo
+@init:
+	bun install
+
+
+# Dev server
+@serve:
+	bun run dev --port 5577
+
+
+# Build production site
+@build:
+	bun run build

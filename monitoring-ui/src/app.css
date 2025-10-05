@@ -1,0 +1,14 @@
+:root {
+  font-family: Noto Sans, sans-serif;
+  line-height: 1.5;
+  margin-left: 4rem;
+  margin-right: 2rem;
+  margin-top: 2rem;
+}
+
+button {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.2rem;
+  border-width: 1px;
+}
