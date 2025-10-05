@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import { WebSocketClient } from "./lib/websocket.svelte.js";
   import MonitoringGraph from "./lib/MonitoringGraph.svelte";
+  import FrameStreamer from "./lib/FrameStreamer.svelte";
 
   let websocketClient;
   let connectionStatus = $state("disconnected");
@@ -72,9 +73,16 @@
 
   <!-- WebSocket Client is now managed in JavaScript -->
 
-  <!-- Monitoring Graph Component -->
+  <!-- Monitoring Components -->
   {#if connectionStatus === "connected"}
-    <MonitoringGraph data={latestData} />
+    <div class="monitoring-grid">
+      <div class="graph-section">
+        <MonitoringGraph data={latestData} />
+      </div>
+      <div class="frame-section">
+        <FrameStreamer data={latestData} />
+      </div>
+    </div>
   {:else if connectionStatus === "connecting"}
     <div class="card">
       <p>Connecting to WebSocket server...</p>
@@ -128,5 +136,22 @@
   .status-unknown {
     color: #6c757d;
     font-weight: bold;
+  }
+
+  .monitoring-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  .graph-section, .frame-section {
+    min-width: 0; /* Prevents grid overflow */
+  }
+
+  @media (max-width: 1024px) {
+    .monitoring-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

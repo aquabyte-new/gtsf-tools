@@ -4,7 +4,11 @@ import math
 import random
 import time
 import websockets
+import os
+import glob
 from typing import Set
+from aiohttp import web
+import aiohttp_cors
 
 
 class MetricProducer:
@@ -18,6 +22,20 @@ class MetricProducer:
             'last_send_time': 0,
             'send_delays': []
         }
+        self.frame_files = []
+        self.current_frame_index = 0
+        self.load_frame_files()
+    
+    def load_frame_files(self):
+        """Load all frame files from test-data directory"""
+        test_data_dir = "test-data"
+        if os.path.exists(test_data_dir):
+            # Find all left_frame.jpg files
+            pattern = os.path.join(test_data_dir, "at=*/left_frame.jpg")
+            self.frame_files = sorted(glob.glob(pattern))
+            print(f"Loaded {len(self.frame_files)} frame files")
+        else:
+            print("test-data directory not found")
     
     async def register_client(self, websocket):
         self.clients.add(websocket)
@@ -94,8 +112,35 @@ class MetricProducer:
             
             await self.broadcast_metric(metric_data)
             
+            # Send frame data if available
+            if self.frame_files:
+                await self.broadcast_frame()
+            
             t += 0.1
-            await asyncio.sleep(0.03)  # Send data every n seconds
+            await asyncio.sleep(0.125)  # Send data every n seconds
+    
+    async def broadcast_frame(self):
+        """Broadcast current frame information"""
+        if not self.frame_files:
+            return
+            
+        frame_path = self.frame_files[self.current_frame_index]
+        frame_filename = os.path.basename(frame_path)
+        frame_dir = os.path.basename(os.path.dirname(frame_path))
+        
+        frame_data = {
+            "type": "frame",
+            "filename": frame_filename,
+            "directory": frame_dir,
+            "timestamp": int(time.time() * 1000),
+            "frame_index": self.current_frame_index,
+            "total_frames": len(self.frame_files)
+        }
+        
+        await self.broadcast_metric(frame_data)
+        
+        # Move to next frame
+        self.current_frame_index = (self.current_frame_index + 1) % len(self.frame_files)
     
     async def handle_client(self, websocket, path):
         await self.register_client(websocket)
@@ -107,13 +152,42 @@ class MetricProducer:
     async def start_server(self):
         self.running = True
         print("Starting WebSocket server on localhost:8765")
+        print("Starting HTTP server on localhost:8080")
         
         # Start the metric generation task
         metric_task = asyncio.create_task(self.generate_noisy_sine_wave())
         
+        # Start HTTP server for serving static files
+        app = web.Application()
+        
+        # Configure CORS
+        cors = aiohttp_cors.setup(app, defaults={
+            "*": aiohttp_cors.ResourceOptions(
+                allow_credentials=True,
+                expose_headers="*",
+                allow_headers="*",
+                allow_methods="*"
+            )
+        })
+        
+        # Serve static files from test-data directory
+        app.router.add_static('/frames/', path='test-data', name='frames')
+        
+        # Add CORS to all routes
+        for route in list(app.router.routes()):
+            cors.add(route)
+        
+        # Start HTTP server
+        http_server = web.AppRunner(app)
+        await http_server.setup()
+        http_site = web.TCPSite(http_server, 'localhost', 8080)
+        await http_site.start()
+        
         # Start the WebSocket server
         async with websockets.serve(self.handle_client, "localhost", 8765):
             print("WebSocket server running on ws://localhost:8765")
+            print("HTTP server running on http://localhost:8080")
+            print("Frames available at http://localhost:8080/frames/")
             await asyncio.Future()  # Run forever
 
 

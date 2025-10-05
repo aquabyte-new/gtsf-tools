@@ -22,7 +22,7 @@
 
   // React to data changes
   $effect(() => {
-    if (data && chart) {
+    if (data && chart && data.type !== "frame") {
       updateChart(data);
     }
   });
