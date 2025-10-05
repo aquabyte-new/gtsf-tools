@@ -89,6 +89,5 @@
         align-items: center;
     }
 
-    .timer-container {
-    }
+    .timer-container {}
 </style>

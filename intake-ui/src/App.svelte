@@ -70,27 +70,15 @@
   }
 
   .clear-btn {
-    margin-left: 1rem;
-    cursor: pointer;
-    background-color: #ff7575;
-    border: 1px solid;
-    border-radius: 0rem;
+    margin-left: 0.2rem;
   }
 
   .export-btn {
-    margin-left: 2rem;
-    cursor: pointer;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 0rem;
+    margin-left: 1.2rem;
   }
 
   .save-btn {
-    margin-left: 1rem;
-    cursor: pointer;
-    background-color: #2b9cff;
-    border: 1px solid #e0e0e0;
-    border-radius: 0rem;
+    margin-left: 0.2rem;
   }
   
   .dev-banner {
@@ -100,5 +88,17 @@
     text-align: center;
     text-transform: uppercase;
     margin: 0rem;
+  }
+  
+  button {
+    cursor: pointer;
+    border: 1px solid;
+    background-color: transparent;
+    border-color: transparent;
+  }
+  
+  button:hover {
+    background-color: #eaeaea;
+    border: 1px solid rgb(168, 168, 168);
   }
 </style>

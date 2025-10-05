@@ -33,6 +33,8 @@
           <div class="history-header">
             <FishIcon iconIdx={fish.iconIdx} />
             <strong>Fish {entries.length - index}</strong>
+            -
+            <i>{fish.weight}g</i>
           </div>
         </div>
       {/each}
@@ -89,12 +91,6 @@
   .history-header strong {
     font-size: 0.95rem;
     color: #333;
-  }
-  
-  .history-detail {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 0.25rem;
   }
   
   .empty-message {

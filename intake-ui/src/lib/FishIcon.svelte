@@ -5,8 +5,13 @@
         getRandomFishIcon,
     } from "./fishIcon.svelte.js";
 
-    let { usePlain = false, iconIdx = null, size = "2rem" } = $props();
-    
+    let {
+        usePlain = false,
+        iconIdx = null,
+        size = "2rem",
+        weight = null,
+    } = $props();
+
     function getIcon() {
         if (usePlain) {
             return plainFish;
@@ -18,7 +23,19 @@
     }
 </script>
 
-<img src={getIcon()} alt="fish" style="width: {size};" />
+<div class="fish-icon-container">
+    <img src={getIcon()} alt="fish" style="width: {size};" />
+    {#if weight}
+        <div class="weight">{weight}g</div>
+    {/if}
+</div>
 
 <style>
+    .fish-icon-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        font-style: italic;
+    }
 </style>

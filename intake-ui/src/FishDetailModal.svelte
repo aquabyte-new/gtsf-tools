@@ -43,7 +43,7 @@
       <div class="modal-body">
         <div class="detail-section">
           <div class="fish-icon-display">
-            <FishIcon iconIdx={fish.iconIdx} size="4rem" />
+            <FishIcon iconIdx={fish.iconIdx} size="4rem" weight={fish.weight}/>
           </div>
         </div>
 

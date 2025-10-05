@@ -17,7 +17,8 @@ const columns = [
     'cameraEndTime',
     'sedationEndTime',
     'measurementEndTime',
-    'notes'
+    'notes',
+    "collectionName",
 ]
 
 const columnMap = {
@@ -54,7 +55,8 @@ function toCSV() {
             ...entry,
             penId: samplingInfo.penId,
             location: samplingInfo.location,
-            species: samplingInfo.species
+            species: samplingInfo.species,
+            collectionName: samplingInfo.name,
         };
         return columns.map(col => escapeCSV(fullEntry[col])).join(',');
     });
@@ -102,7 +104,10 @@ export async function saveToBackend() {
         const response = await fetch(`${apiUrl}/save`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fish),
+            body: JSON.stringify({
+                collectionName: samplingInfo.name,
+                fish: fish,
+            }),
         });
 
         if (!response.ok) {

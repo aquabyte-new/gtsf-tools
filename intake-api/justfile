@@ -9,10 +9,8 @@
 
 
 # Dev server
-@serve-dev:
-  echo "Not build yet, choose one of"
-  echo ' 1) use `uv run fastapi`'
-  echo ' 2) use `uv run uvicorn main:app'
+@serve:
+  uv run uvicorn main:app --reload
 
 
 # Release backend code to production server
