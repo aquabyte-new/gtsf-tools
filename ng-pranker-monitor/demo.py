@@ -5,31 +5,84 @@ import random
 import time
 import websockets
 import os
-from pathlib import Path
+import glob
 from typing import Set
 from aiohttp import web
 import aiohttp_cors
-from loguru import logger
 
 
 class MetricProducer:
     def __init__(self):
         self.clients: Set[websockets.WebSocketServerProtocol] = set()
         self.running = False
+        self.stats = {
+            'messages_sent': 0,
+            'messages_failed': 0,
+            'client_count': 0,
+            'last_send_time': 0,
+            'send_delays': []
+        }
+        self.frame_files = []
+        self.current_frame_index = 0
+        self.load_frame_files()
+    
+    def load_frame_files(self):
+        """Load all frame files from test-data directory"""
+        test_data_dir = "test-data"
+        if os.path.exists(test_data_dir):
+            # Find all left_frame.jpg files
+            pattern = os.path.join(test_data_dir, "at=*/left_frame.jpg")
+            self.frame_files = sorted(glob.glob(pattern))
+            print(f"Loaded {len(self.frame_files)} frame files")
+        else:
+            print("test-data directory not found")
+    
+    async def register_client(self, websocket):
+        self.clients.add(websocket)
+        self.stats['client_count'] = len(self.clients)
+        print(f"Client connected. Total clients: {len(self.clients)}")
+    
+    async def unregister_client(self, websocket):
+        self.clients.discard(websocket)
+        self.stats['client_count'] = len(self.clients)
+        print(f"Client disconnected. Total clients: {len(self.clients)}")
     
     async def broadcast_metric(self, data):
         if self.clients:
+            start_time = time.time()
             message = json.dumps(data)
+            
+            # Track send delays for backpressure monitoring
+            if self.stats['last_send_time'] > 0:
+                delay = start_time - self.stats['last_send_time']
+                self.stats['send_delays'].append(delay)
+                # Keep only last 100 delays
+                if len(self.stats['send_delays']) > 100:
+                    self.stats['send_delays'].pop(0)
+            
+            self.stats['last_send_time'] = start_time
             
             try:
                 results = await asyncio.gather(
                     *[client.send(message) for client in self.clients],
                     return_exceptions=True
                 )
+                
+                # Count successes and failures
+                success_count = sum(1 for result in results if not isinstance(result, Exception))
+                fail_count = len(results) - success_count
+                
+                self.stats['messages_sent'] += success_count
+                self.stats['messages_failed'] += fail_count
+                
+                # Log backpressure warnings
+                if fail_count > 0:
+                    print(f"Warning: {fail_count} messages failed to send (potential backpressure)")
+                
             except Exception as e:
-                logger.error(f"Broadcast error: {e}")
+                self.stats['messages_failed'] += len(self.clients)
+                print(f"Broadcast error: {e}")
     
-
     async def generate_noisy_sine_wave(self):
         """Generate noisy sine wave data"""
         t = 0
@@ -90,11 +143,11 @@ class MetricProducer:
         self.current_frame_index = (self.current_frame_index + 1) % len(self.frame_files)
     
     async def handle_client(self, websocket, path):
-        self.clients.add(websocket)
+        await self.register_client(websocket)
         try:
             await websocket.wait_closed()
         finally:
-            self.clients.discard(websocket)
+            await self.unregister_client(websocket)
     
     async def start_server(self):
         self.running = True

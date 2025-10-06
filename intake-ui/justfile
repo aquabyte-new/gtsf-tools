@@ -23,5 +23,5 @@
   rsync -avz \
     --delete \
     --exclude=.DS_Store \
-    ui/dist/ \
+    dist/ \
     tools:~/gtsf-ui

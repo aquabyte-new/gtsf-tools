@@ -7,3 +7,15 @@
 @init:
     echo "3.8" > .python-version
     uv sync
+
+
+# Build image
+@build:
+    docker build -t ng-pranker-monitor .
+    
+
+@run:
+    docker run \
+        -ti \
+        --rm \
+        ng-pranker-monitor run demo.py
