@@ -51,13 +51,13 @@
         </div>
         <div class="button-container">
             {#if sedationStageActive()}
-                <button class="stg-btn busy">Sedation busy</button>
+                <button class="stg-btn" disabled>Sedation busy</button>
             {:else}
                 <button class="stg-btn move" onclick={toSedation}>To sedation</button>
             {/if}
 
             <div>
-                <button class="stg-btn disgard" onclick={reset}>Reset</button>
+                <button class="stg-btn disgard" onclick={reset}>Discard</button>
             </div>
         </div>
     {:else}

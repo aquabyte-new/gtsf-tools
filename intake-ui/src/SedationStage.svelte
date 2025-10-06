@@ -14,7 +14,7 @@
         stages.measurement = fish;
         stages.sedation = null;
     }
-    
+
     function discard() {
         if (confirm("Are you sure you want to discard this fish?")) {
             stages.sedation = null;
@@ -37,19 +37,19 @@
         </div>
 
         <div class="button-container">
-            {#if measurementStageActive()}
-                <div>
-                    <button class="stg-btn busy">Measurement busy</button>
-                </div>
-            {:else}
-                <div>
+            <div>
+                {#if measurementStageActive()}
+                    <button class="stg-btn" disabled>Measurement busy</button>
+                {:else}
                     <button class="stg-btn move" onclick={toMeasurement}
                         >To measurement</button
                     >
-                </div>
-            {/if}
+                {/if}
+            </div>
             <div>
-                <button class="stg-btn disgard" onclick={discard}>Discard</button>
+                <button class="stg-btn disgard" onclick={discard}
+                    >Discard</button
+                >
             </div>
         </div>
     {:else}

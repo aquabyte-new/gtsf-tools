@@ -29,8 +29,9 @@
     if (!isWeightValid(weight) && !check("Weight is unusual")) return;
     if (!isLengthValid(weight, length) && !check("Length is ususual")) return;
     if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
-    if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual")) return;
-    
+    if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual"))
+      return;
+
     stages.measurement = {
       ...stages.measurement,
       measurementEndTime: Date.now(),
@@ -42,7 +43,7 @@
     };
 
     saveFish(stages.measurement);
-    
+
     saveToBackend(true);
 
     stages.measurement = null;
@@ -139,10 +140,14 @@
     </form>
 
     <div class="button-container">
-      <button class="stg-btn move" onclick={log} disabled={!canSubmit}
-        >Submit and release</button
-      >
-      <button class="stg-btn disgard" onclick={discard}>Discard</button>
+      <div>
+        <button class="stg-btn move" onclick={log} disabled={!canSubmit}
+          >Submit and release</button
+        >
+      </div>
+      <div>
+        <button class="stg-btn disgard" onclick={discard}>Discard</button>
+      </div>
     </div>
   {:else}
     <p class="waiting">Waiting for fish</p>
@@ -158,6 +163,9 @@
 
   .button-container {
     margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
   }
 
   .waiting {
@@ -194,5 +202,9 @@
     height: 4rem;
     vertical-align: top;
     resize: vertical;
+  }
+
+  h3 {
+    margin-top: 0;
   }
 </style>
