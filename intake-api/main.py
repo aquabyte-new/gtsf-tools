@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from loguru import logger
 from fastapi import FastAPI
@@ -58,6 +59,27 @@ def save(request: SaveRequest):
     # Save timestamped CSV.
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = collection_dir / f"gtsf_{ts}.csv"
-    df.to_csv(filename)
+    df.to_csv(filename, index=False)
 
     logger.info(f"Saved {len(request.fish)} fish.")
+    
+
+@app.get("/collections")
+def collections():
+    return sorted(SAVE_DIR.glob("*"))
+
+
+@app.get("/collection/{collection_name}")
+def collection(collection_name: str):
+    entries = pd.read_csv(SAVE_DIR / collection_name / "gtsf_latest.csv")
+    
+    if "Unnamed: 0" in entries.columns:
+        entries = entries.drop(columns=["Unnamed: 0"])
+    
+    entries = (
+        entries
+        .replace({np.nan:None})
+        .to_dict(orient="records")
+    )
+
+    return entries

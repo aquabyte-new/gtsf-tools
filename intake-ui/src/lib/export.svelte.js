@@ -86,7 +86,7 @@ export function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
-export async function saveToBackend() {
+export async function saveToBackend(quiet = false) {
     if (entries.length === 0) {
         alert("No data to save");
         return;
@@ -114,7 +114,9 @@ export async function saveToBackend() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        alert(`Successfully saved ${entries.length} fish to backend`);
+        if (!quiet) {
+            alert(`Successfully saved ${entries.length} fish to backend`);
+        }
     } catch (error) {
         console.error('Failed to save to backend:', error);
         alert(`Failed to save to backend: ${error.message}`);

@@ -47,7 +47,7 @@
     {#if cameraStageActive()}
         <ActiveFish {iconIdx} />
         <div class="timer-container">
-            <Timer startTime={stages.camera.cameraStartTime} />
+            <Timer startTime={stages.camera.cameraStartTime}/>
         </div>
         <div class="button-container">
             {#if sedationStageActive()}

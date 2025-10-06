@@ -12,6 +12,7 @@
   } from "./lib/validation.js";
   import ActiveFish from "./lib/ActiveFish.svelte";
   import BoardIcon from "./assets/measuring-icon-2.jpeg";
+  import { saveToBackend } from "./lib/export.svelte.js";
 
   const activeFish = $derived(stages.measurement);
 
@@ -41,6 +42,9 @@
     };
 
     saveFish(stages.measurement);
+    
+    saveToBackend(true);
+
     stages.measurement = null;
 
     resetForm();

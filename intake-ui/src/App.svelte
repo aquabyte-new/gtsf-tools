@@ -4,7 +4,6 @@
     samplingInfo,
     entries,
     clearAppState,
-    measurementStageActive,
   } from "./lib/state.svelte.js";
   import HistorySidebar from "./HistorySidebar.svelte";
   import StagesContainer from "./StagesContainer.svelte";

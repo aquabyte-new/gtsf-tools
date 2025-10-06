@@ -1,7 +1,10 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
-  let { startTime } = $props();
+  let { 
+    startTime,
+    label = "Timer",
+  } = $props();
   
   let t0 = $derived(Math.floor(startTime / 1000) * 1000)
   let elapsed = $state(0);
@@ -37,7 +40,7 @@
 </script>
 
 <div class="timer">
-  <p>Timer</p>
+  <p>{label}</p>
   {formatTime(elapsed)}
 </div>
 

@@ -1,8 +1,45 @@
 <script>
   import FishIcon from "./lib/FishIcon.svelte";
-  import { samplingInfo } from "./lib/state.svelte.js";
+  import { samplingInfo, entries } from "./lib/state.svelte.js";
+  import {
+    isWeightValid,
+    isLengthValid,
+    isWidthValid,
+    isBreadthValid,
+  } from "./lib/validation.js";
 
   let { fish = null, onClose } = $props();
+
+  let isEditing = $state(false);
+  let editedWeight = $state('');
+  let editedLength = $state('');
+  let editedWidth = $state('');
+  let editedBreadth = $state('');
+
+  // Validation state
+  const weightValid = $derived(isWeightValid(editedWeight ? parseFloat(editedWeight) : null));
+  const lengthValid = $derived(isLengthValid(
+    editedWeight ? parseFloat(editedWeight) : null,
+    editedLength ? parseFloat(editedLength) : null
+  ));
+  const widthValid = $derived(isWidthValid(
+    editedWeight ? parseFloat(editedWeight) : null,
+    editedWidth ? parseFloat(editedWidth) : null
+  ));
+  const breadthValid = $derived(isBreadthValid(
+    editedWeight ? parseFloat(editedWeight) : null,
+    editedBreadth ? parseFloat(editedBreadth) : null
+  ));
+
+  // Initialize edit values when fish changes
+  $effect(() => {
+    if (fish) {
+      editedWeight = fish.weight?.toString() || '';
+      editedLength = fish.length?.toString() || '';
+      editedWidth = fish.width?.toString() || '';
+      editedBreadth = fish.breadth?.toString() || '';
+    }
+  });
 
   function formatTimestamp(timestamp) {
     if (!timestamp) return "N/A";
@@ -27,6 +64,53 @@
     if (e.target === e.currentTarget) {
       onClose();
     }
+  }
+
+  function startEditing() {
+    isEditing = true;
+  }
+
+  function cancelEditing() {
+    isEditing = false;
+    // Reset to original values
+    editedWeight = fish.weight?.toString() || '';
+    editedLength = fish.length?.toString() || '';
+    editedWidth = fish.width?.toString() || '';
+    editedBreadth = fish.breadth?.toString() || '';
+  }
+
+  function saveChanges() {
+    const weight = editedWeight ? parseFloat(editedWeight) : null;
+    const length = editedLength ? parseFloat(editedLength) : null;
+    const width = editedWidth ? parseFloat(editedWidth) : null;
+    const breadth = editedBreadth ? parseFloat(editedBreadth) : null;
+
+    // Validation with confirmation dialogs (same as MeasurementStage)
+    const check = (msg) => confirm(msg + ", are you sure you want to save?");
+    if (!isWeightValid(weight) && !check("Weight is unusual")) return;
+    if (!isLengthValid(weight, length) && !check("Length is unusual")) return;
+    if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
+    if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual")) return;
+
+    // Find the fish in entries and update it
+    const fishIndex = entries.findIndex(f => f.id === fish.id);
+    if (fishIndex !== -1) {
+      entries[fishIndex] = {
+        ...entries[fishIndex],
+        weight: weight,
+        length: length,
+        width: width,
+        breadth: breadth
+      };
+      
+      // Update the fish prop reference
+      fish.weight = weight;
+      fish.length = length;
+      fish.width = width;
+      fish.breadth = breadth;
+    }
+    
+    isEditing = false;
   }
 </script>
 
@@ -60,23 +144,86 @@
         </div>
 
         <div class="detail-section">
-          <h3>Measurements</h3>
-          <div class="detail-row">
-            <span class="label">Weight:</span>
-            <span class="value">{fish.weight ?? "N/A"} {fish.weight ? "g" : ""}</span>
+          <div class="section-header">
+            <h3>Measurements</h3>
+            {#if !isEditing}
+              <button class="edit-button" onclick={startEditing}>Edit</button>
+            {/if}
           </div>
-          <div class="detail-row">
-            <span class="label">Length:</span>
-            <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Width:</span>
-            <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Breadth:</span>
-            <span class="value">{fish.breadth ?? "N/A"} {fish.breadth ? "mm" : ""}</span>
-          </div>
+          
+          {#if isEditing}
+            <div class="edit-form">
+              <div class="edit-row">
+                <label for="weight-input" class="edit-label">Weight (g):</label>
+                <input 
+                  id="weight-input"
+                  type="number" 
+                  step="1" 
+                  bind:value={editedWeight} 
+                  class="edit-input"
+                  class:invalid={editedWeight && !weightValid}
+                  placeholder="Enter weight"
+                />
+              </div>
+              <div class="edit-row">
+                <label for="length-input" class="edit-label">Length (mm):</label>
+                <input 
+                  id="length-input"
+                  type="number" 
+                  step="1" 
+                  bind:value={editedLength} 
+                  class="edit-input"
+                  class:invalid={editedLength && !lengthValid}
+                  placeholder="Enter length"
+                />
+              </div>
+              <div class="edit-row">
+                <label for="width-input" class="edit-label">Width (mm):</label>
+                <input 
+                  id="width-input"
+                  type="number" 
+                  step="1" 
+                  bind:value={editedWidth} 
+                  class="edit-input"
+                  class:invalid={editedWidth && !widthValid}
+                  placeholder="Enter width"
+                />
+              </div>
+              <div class="edit-row">
+                <label for="breadth-input" class="edit-label">Breadth (mm):</label>
+                <input 
+                  id="breadth-input"
+                  type="number" 
+                  step="1" 
+                  bind:value={editedBreadth} 
+                  class="edit-input"
+                  class:invalid={editedBreadth && !breadthValid}
+                  placeholder="Enter breadth"
+                />
+              </div>
+              <div class="edit-actions">
+                <button class="save-button" onclick={saveChanges}>Save</button>
+                <button class="cancel-button" onclick={cancelEditing}>Cancel</button>
+              </div>
+            </div>
+          {:else}
+            <div class="detail-row">
+              <span class="label">Weight:</span>
+              <span class="value">{fish.weight ?? "N/A"} {fish.weight ? "g" : ""}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Length:</span>
+              <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Width:</span>
+              <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Breadth:</span>
+              <span class="value">{fish.breadth ?? "N/A"} {fish.breadth ? "mm" : ""}</span>
+            </div>
+          {/if}
         </div>
 
         <div class="detail-section">
@@ -291,6 +438,98 @@
     font-size: 0.8rem;
     color: #666;
     font-family: monospace;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .edit-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .edit-button:hover {
+    background-color: #0056b3;
+  }
+
+  .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .edit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .edit-label {
+    font-weight: 500;
+    color: #666;
+    min-width: 100px;
+  }
+
+  .edit-input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .edit-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+
+  .edit-input.invalid {
+    border-color: #ff4444;
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .save-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .save-button:hover {
+    background-color: #218838;
+  }
+
+  .cancel-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .cancel-button:hover {
+    background-color: #545b62;
   }
 </style>
 
