@@ -18,5 +18,4 @@ Runs on EC2.
 | Instance Name  | sam-internal-tools           |
 | Instance ID    | i-053d3b4d63ce1105e         |
 | Public IP      | 52.30.78.25                 |
-| Tailscale IP   |                             |
-| URL            | http://52.30.78.25:8000     |
+| Tailscale IP   | 100.80.5.13                 |

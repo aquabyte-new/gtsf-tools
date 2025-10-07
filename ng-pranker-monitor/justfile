@@ -1,3 +1,11 @@
+PROJ := 'hh-gtsf-monitor'
+
+# ECR repo and tags
+ECR_REPO := "286712564201.dkr.ecr.eu-west-1.amazonaws.com/research"
+LATEST_TAG := PROJ + '-latest'
+DATE_TAG := PROJ + '-' + shell('date -I')
+
+
 # Display commands
 @help:
     just --list
@@ -11,11 +19,22 @@
 
 # Build image
 @build:
-    docker build -t ng-pranker-monitor .
+    tar -cvzf ui-dist.tar.gz ui-dist
+    docker build -t {{PROJ}} .
     
 
+# Run the docker container locally
 @run:
     docker run \
         -ti \
         --rm \
         ng-pranker-monitor run demo.py
+
+
+# Release the image to ECR
+@release: build
+    for tag in {{LATEST_TAG}} {{DATE_TAG}}; do \
+        echo Pushing ${tag}...; \
+        docker tag {{PROJ}} "{{ECR_REPO}}:${tag}"; \
+        docker push "{{ECR_REPO}}:${tag}"; \
+    done
