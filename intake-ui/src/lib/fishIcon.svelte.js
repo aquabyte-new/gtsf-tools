@@ -1,16 +1,16 @@
-import plainFish from "../assets/fish-icons/fish-icon-1.svg";
-import prettyFish1 from "../assets/fish-icons/fish-icon-2.svg";
-import prettyFish2 from "../assets/fish-icons/fish-icon-3.svg";
-import prettyFish3 from "../assets/fish-icons/fish-icon-4.svg";
-import prettyFish4 from "../assets/fish-icons/fish-icon-5.svg";
-import prettyFish5 from "../assets/fish-icons/fish-icon-6.svg";
-import prettyFish6 from "../assets/fish-icons/fish-icon-7.svg";
-import prettyFish7 from "../assets/fish-icons/fish-icon-8.svg";
-import prettyFish8 from "../assets/fish-icons/fish-icon-9.svg";
-import prettyFish9 from "../assets/fish-icons/fish-icon-10.svg";
-import prettyFish10 from "../assets/fish-icons/fish-icon-11.svg";
-import prettyFish11 from "../assets/fish-icons/fish-icon-12.svg";
-import prettyFish12 from "../assets/fish-icons/fish-icon-13.svg";
+import plainFish from "./assets/fish-icons/fish-icon-1.svg";
+import prettyFish1 from "./assets/fish-icons/fish-icon-2.svg";
+import prettyFish2 from "./assets/fish-icons/fish-icon-3.svg";
+import prettyFish3 from "./assets/fish-icons/fish-icon-4.svg";
+import prettyFish4 from "./assets/fish-icons/fish-icon-5.svg";
+import prettyFish5 from "./assets/fish-icons/fish-icon-6.svg";
+import prettyFish6 from "./assets/fish-icons/fish-icon-7.svg";
+import prettyFish7 from "./assets/fish-icons/fish-icon-8.svg";
+import prettyFish8 from "./assets/fish-icons/fish-icon-9.svg";
+import prettyFish9 from "./assets/fish-icons/fish-icon-10.svg";
+import prettyFish10 from "./assets/fish-icons/fish-icon-11.svg";
+import prettyFish11 from "./assets/fish-icons/fish-icon-12.svg";
+import prettyFish12 from "./assets/fish-icons/fish-icon-13.svg";
 
 import { stages } from "./state.svelte.js";
 
