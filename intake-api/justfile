@@ -10,7 +10,7 @@
 
 # Dev server
 @serve:
-  uv run uvicorn main:app --reload --port 8821
+  uv run uvicorn main:app --reload --port 8821 --host 0.0.0.0
 
 
 # Release backend code to production server
@@ -20,5 +20,5 @@
     --exclude=__pycache__ \
     --exclude=.DS_Store \
     --exclude=.venv \
-    backend/ \
+    ./ \
     tools:~/gtsf-backend

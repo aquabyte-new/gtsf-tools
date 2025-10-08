@@ -1,11 +1,19 @@
 <script>
+    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { clearAppState, entries, samplingInfo } from '$lib/state.svelte.js';
 
-    let { data } = $props();
-    const collections = data.collections || [];
-
+    let collections = $state([]);
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    onMount(async () => {
+        try {
+            const response = await fetch(`${apiUrl}/collections`);
+            collections = await response.json();
+        } catch (error) {
+            console.error('Failed to load collections:', error);
+        }
+    });
 
     async function openCollection(collectionName) {
         try {
