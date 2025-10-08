@@ -1,6 +1,4 @@
 <div class="banner">
-    <div class="banner-title">VITE MODE: {import.meta.env.MODE}</div>
-    <div class="banner-title">VITE SSR: {import.meta.env.SSR}</div>
     <div>
         Backend API: <a
             href="{import.meta.env.VITE_API_URL}/docs"
