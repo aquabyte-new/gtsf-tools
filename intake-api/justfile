@@ -10,7 +10,7 @@
 
 # Dev server
 @serve:
-  uv run uvicorn main:app --reload
+  uv run uvicorn main:app --reload --port 8821
 
 
 # Release backend code to production server

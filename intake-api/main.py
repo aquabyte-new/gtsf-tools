@@ -66,7 +66,23 @@ def save(request: SaveRequest):
 
 @app.get("/collections")
 def collections():
-    return sorted(SAVE_DIR.glob("*"))
+    collection_dirs = sorted(SAVE_DIR.glob("*"))
+    
+    collections = []
+    for collection_dir in collection_dirs:
+        if not (collection_dir / "gtsf_latest.csv").exists():
+            continue
+        
+        df = pd.read_csv(collection_dir / "gtsf_latest.csv")
+        
+        collections.append({
+            "name": collection_dir.name,
+            "numFish": len(df),
+            "avgWeight": df["weight"].mean(),
+        })
+    
+    print(collections)
+    return collections
 
 
 @app.get("/collection/{collection_name}")

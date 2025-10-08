@@ -19,7 +19,7 @@ DATE_TAG := PROJ + '-' + shell('date -I')
 
 # Build image
 @build:
-    tar -cvzf ui-dist.tar.gz ui-dist
+    tar -czhf ui.tar.gz --dereference ui-dist
     docker build -t {{PROJ}} .
     
 
@@ -28,7 +28,8 @@ DATE_TAG := PROJ + '-' + shell('date -I')
     docker run \
         -ti \
         --rm \
-        ng-pranker-monitor run demo.py
+        --network host \
+        {{PROJ}} /bin/bash
 
 
 # Release the image to ECR
