@@ -1,6 +1,6 @@
 # Intake UI
 
-<img width="2506" height="1680" alt="Capture-2025-10-03-224107" src="https://github.com/user-attachments/assets/93de4efb-c8c8-46c1-bb75-0053882f8e57" />
+<img width="2551" height="1669" alt="Capture-2025-10-07-210513" src="https://github.com/user-attachments/assets/fb6f74ec-49ae-43e8-908f-e50aab4e9ffb" />
 
 # Developing
 This repo uses [Svelte](https://svelte.dev/docs/svelte/overview) and [SvelteKit](https://svelte.dev/docs/kit/introduction) to create a reactive static website that can interface with our FastAPI backend.
