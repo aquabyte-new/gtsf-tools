@@ -93,7 +93,6 @@ export class WebSocketClient {
             return; // Already scheduled
         }
 
-
         this.reconnectInterval = setInterval(() => {
             this.connect();
         }, this.options.reconnectDelay);
