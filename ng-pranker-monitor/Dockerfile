@@ -10,7 +10,8 @@ RUN chmod +x /usr/local/bin/miniserve
 # Install python packages.
 WORKDIR /app
 ADD pyproject.toml .
-RUN uv sync --no-dev
+ENV UV_NO_DEV=1
+RUN uv sync
 
 # Add the UI.
 WORKDIR /www

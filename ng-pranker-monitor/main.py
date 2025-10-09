@@ -27,7 +27,10 @@ class Producer:
 
     async def broadcast_metric(self, data):
         if self.clients:
+            logger.info(f"Broadcasting to {len(self.clients)} clients")
             message = json.dumps(data)
+            
+            logger.info(f"Broadcasting metric: {message}")
 
             try:
                 results = await asyncio.gather(
@@ -36,52 +39,56 @@ class Producer:
                 )
             except Exception as e:
                 logger.error(f"Broadcast error: {e}")
+            
+            logger.info("Broadcast complete")
+        else:
+            logger.info("No clients to broadcast to")
 
     async def generate(self):
         latest = None
         while self.running:
-            # Get the latest directory and make sure we don't double count.
-            new_dir = latest_dir()
-            if new_dir == latest:
-                continue
-            latest = new_dir
+            try:
+                logger.info("Generating metric...")
 
-            left_thumb = latest / "left_frame.resize_512_512.jpg"
-            right_thumb = latest / "right_frame.resize_512_512.jpg"
-            detections = latest / "biomass_detections.json"
+                # Get the latest directory and make sure we don't double count.
+                new_dir = latest_dir()
+                if new_dir == latest:
+                    logger.info("No new directory found, skipping.")
+                    await asyncio.sleep(0.01)
+                    continue
 
-            # Create metric data
-            metric_data = {
-                "name": "test_metric",
-                "val": 0.0,
-                "timestamp": int(time.time() * 1000),  # milliseconds
-            }
+                latest = new_dir
 
-            # await self.broadcast_metric(metric_data)
+                left_thumb = latest / "left_frame.resize_512_512.jpg"
+                right_thumb = latest / "right_frame.resize_512_512.jpg"
+                detections = latest / "biomass_detections.json"
 
-            # Send frame data if available
-            if left_thumb.exists():
-                logger.info(f"Broadcasting frame: {left_thumb}")
-                data = {
-                    "type": "frame",
-                    "filename": left_thumb.name,
-                    "directory": left_thumb.parent.name,
-                    "timestamp": int(time.time() * 1000),
-                }
-                await self.broadcast_metric(data)
-                
-            # Send detections data if available
-            if detections.exists():
-                logger.info(f"Broadcasting detections: {detections}")
-                data = {
-                    "type": "detections",
-                    "value": json.load(detections.read_text()),
-                    "timestamp": int(time.time() * 1000),
-                }
-                await self.broadcast_metric(data)
+                # Send frame data if available
+                if left_thumb.exists():
+                    logger.info(f"Broadcasting frame: {left_thumb}")
+                    data = {
+                        "type": "frame",
+                        "filename": left_thumb.name,
+                        "directory": left_thumb.parent.name,
+                        "timestamp": int(time.time() * 1000),
+                    }
+                    await self.broadcast_metric(data)
+                    
+                # Send detections data if available
+                if detections.exists():
+                    logger.info(f"Broadcasting detections: {detections}")
+                    data = {
+                        "type": "detections",
+                        "value": json.loads(detections.read_text()),
+                        "timestamp": int(time.time() * 1000),
+                    }
+                    await self.broadcast_metric(data)
 
-            sleep_ms = 10
-            await asyncio.sleep(sleep_ms / 1e3)
+                sleep_ms = 10
+                await asyncio.sleep(sleep_ms / 1e3)
+            except Exception as e:
+                logger.error(f"Error in generate loop: {e}", exc_info=True)
+                await asyncio.sleep(1)  # Wait a bit before retrying
 
     async def handle_client(self, websocket, path):
         logger.info("New client connected.")

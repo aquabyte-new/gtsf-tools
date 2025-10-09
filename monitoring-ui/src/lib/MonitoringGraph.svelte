@@ -4,44 +4,63 @@
 
   let chartContainer;
   let chart;
-  let dataPoints = [];
   let maxDataPoints = 1000; // Keep last 1000 points for history
 
-  let peaks = $state(0);
-  let isLow = $state(true);
-  let backpressure = $state({
-    avg_send_delay: 0,
-    failure_rate: 0,
-    client_count: 0,
-    messages_sent: 0,
-    messages_failed: 0,
-  });
+  const classCounts = {
+    'HIGH': 0,
+    'LOW': 0,
+    'MEDIUM': 0,
+    'PARTIAL': 0,
+  };
+
+  const lines = {
+    'HIGH': [],
+    'LOW': [],
+    'MEDIUM': [],
+    'PARTIAL': [],
+  };
+
 
   // Props
   let { data = null } = $props();
 
   // React to data changes
+  // https://svelte.dev/docs/svelte/$effect#When-not-to-use-$effect
   $effect(() => {
-    if (data && chart && data.type !== "frame") {
+    if (data && chart && data.type === "detections") {
       updateChart(data);
     }
   });
 
   function updateChart(metricData) {
-    // Add new data point
-    dataPoints.push([metricData.timestamp, metricData.val]);
+    const ts = metricData.timestamp;
+    const detections = metricData.value;
+    console.log(detections);
+    
+    detections.forEach(detection => {
+      const className = detection.left.class_name;
+      classCounts[className]++;
+    });
+    
+    lines['PARTIAL'].push([ts, classCounts['PARTIAL']]);
+    lines['LOW'].push([ts, classCounts['LOW']]);
+    lines['MEDIUM'].push([ts, classCounts['MEDIUM']]);
+    lines['HIGH'].push([ts, classCounts['HIGH']]);
 
-    // Keep only last maxDataPoints
-    if (dataPoints.length > maxDataPoints) {
-      dataPoints.shift();
-    }
+    // Keep only last maxDataPoints for each line
+    Object.keys(lines).forEach(key => {
+      if (lines[key].length > maxDataPoints) {
+        lines[key].shift();
+      }
+    });
 
-    // Update chart
+    // Update chart with all 4 series
     chart.setOption({
       series: [
-        {
-          data: dataPoints,
-        },
+        { data: lines['HIGH'] },
+        { data: lines['MEDIUM'] },
+        { data: lines['LOW'] },
+        { data: lines['PARTIAL'] },
       ],
     });
   }
@@ -53,14 +72,21 @@
     // Set initial chart options
     chart.setOption({
       title: {
-        text: "Live Pranker Data",
+        text: "Live Pranker Data - Class Counts",
       },
       tooltip: {
         trigger: "axis",
         formatter: function (params) {
-          const data = params[0];
-          return `Time: ${new Date(data.value[0]).toLocaleTimeString()}<br/>Value: ${data.value[1]}`;
+          let result = `Time: ${new Date(params[0].value[0]).toLocaleTimeString()}<br/>`;
+          params.forEach(param => {
+            result += `${param.seriesName}: ${param.value[1]}<br/>`;
+          });
+          return result;
         },
+      },
+      legend: {
+        data: ['HIGH', 'MEDIUM', 'LOW', 'PARTIAL'],
+        top: 30,
       },
       xAxis: {
         type: "time",
@@ -68,15 +94,40 @@
       },
       yAxis: {
         type: "value",
-        name: "Value",
+        name: "Count",
       },
       series: [
         {
-          name: "live_pranker_data",
+          name: "HIGH",
           type: "line",
           data: [],
           smooth: true,
           symbol: "none",
+          color: "#ff4444",
+        },
+        {
+          name: "MEDIUM",
+          type: "line",
+          data: [],
+          smooth: true,
+          symbol: "none",
+          color: "#ff9944",
+        },
+        {
+          name: "LOW",
+          type: "line",
+          data: [],
+          smooth: true,
+          symbol: "none",
+          color: "#44ff44",
+        },
+        {
+          name: "PARTIAL",
+          type: "line",
+          data: [],
+          smooth: true,
+          symbol: "none",
+          color: "#4444ff",
         },
       ],
     });
