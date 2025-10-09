@@ -27,11 +27,8 @@ class Producer:
 
     async def broadcast_metric(self, data):
         if self.clients:
-            logger.info(f"Broadcasting to {len(self.clients)} clients")
             message = json.dumps(data)
             
-            logger.info(f"Broadcasting metric: {message}")
-
             try:
                 results = await asyncio.gather(
                     *[client.send(message) for client in self.clients],
@@ -40,7 +37,6 @@ class Producer:
             except Exception as e:
                 logger.error(f"Broadcast error: {e}")
             
-            logger.info("Broadcast complete")
         else:
             logger.info("No clients to broadcast to")
 
@@ -48,12 +44,10 @@ class Producer:
         latest = None
         while self.running:
             try:
-                logger.info("Generating metric...")
-
                 # Get the latest directory and make sure we don't double count.
                 new_dir = latest_dir()
                 if new_dir == latest:
-                    logger.info("No new directory found, skipping.")
+                    logger.debug("No new directory found, skipping.")
                     await asyncio.sleep(0.01)
                     continue
 
@@ -73,6 +67,8 @@ class Producer:
                         "timestamp": int(time.time() * 1000),
                     }
                     await self.broadcast_metric(data)
+                else:
+                    continue
                     
                 # Send detections data if available
                 if detections.exists():

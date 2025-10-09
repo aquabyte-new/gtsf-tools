@@ -1,17 +1,18 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import * as echarts from "echarts";
 
   let chartContainer;
   let chart;
   let maxDataPoints = 1000; // Keep last 1000 points for history
 
-  const classCounts = {
+  // Use $state (not raw) so template reactively updates when counts change
+  const classCounts = $state({
     'HIGH': 0,
     'LOW': 0,
     'MEDIUM': 0,
     'PARTIAL': 0,
-  };
+  });
 
   const lines = {
     'HIGH': [],
@@ -35,17 +36,19 @@
   function updateChart(metricData) {
     const ts = metricData.timestamp;
     const detections = metricData.value;
-    console.log(detections);
     
     detections.forEach(detection => {
       const className = detection.left.class_name;
-      classCounts[className]++;
+      // Use untrack to read the value without creating a reactive dependency
+      // This prevents infinite loops in the $effect
+      classCounts[className] = untrack(() => classCounts[className]) + 1;
     });
     
-    lines['PARTIAL'].push([ts, classCounts['PARTIAL']]);
-    lines['LOW'].push([ts, classCounts['LOW']]);
-    lines['MEDIUM'].push([ts, classCounts['MEDIUM']]);
-    lines['HIGH'].push([ts, classCounts['HIGH']]);
+    // Use untrack when reading counts to prevent reactive dependencies
+    lines['PARTIAL'].push([ts, untrack(() => classCounts['PARTIAL'])]);
+    lines['LOW'].push([ts, untrack(() => classCounts['LOW'])]);
+    lines['MEDIUM'].push([ts, untrack(() => classCounts['MEDIUM'])]);
+    lines['HIGH'].push([ts, untrack(() => classCounts['HIGH'])]);
 
     // Keep only last maxDataPoints for each line
     Object.keys(lines).forEach(key => {
@@ -59,8 +62,8 @@
       series: [
         { data: lines['HIGH'] },
         { data: lines['MEDIUM'] },
-        { data: lines['LOW'] },
-        { data: lines['PARTIAL'] },
+        // { data: lines['LOW'] },
+        // { data: lines['PARTIAL'] },
       ],
     });
   }
@@ -141,6 +144,12 @@
 </script>
 
 <div class="monitoring-graph">
+  <div>
+    <div>HIGH: {classCounts['HIGH']}</div>
+    <div>MEDIUM: {classCounts['MEDIUM']}</div>
+    <div>LOW: {classCounts['LOW']}</div>
+    <div>PARTIAL: {classCounts['PARTIAL']}</div>
+  </div>
   <div class="chart-container">
     <div bind:this={chartContainer} style="width: 100%; height: 400px;"></div>
   </div>
