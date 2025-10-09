@@ -3,6 +3,7 @@
 
   let currentFrame = $state(null);
   let frameInfo = $state(null);
+  let ts = $state(null);
   let frameUrl = $state("");
 
   // Props
@@ -10,13 +11,14 @@
 
   // React to frame data changes
   $effect(() => {
-    if (data && data.type === "frame") {
-      updateFrame(data);
+    if (data && data.leftThumb !== undefined) {
+      updateFrame(data.createdAt, data.leftThumb);
     }
   });
 
-  function updateFrame(frameData) {
+  function updateFrame(ts, frameData) {
     frameInfo = frameData;
+    ts = ts;
     
     // Construct the URL for the current frame
     if (frameData.directory && frameData.filename) {
@@ -44,50 +46,32 @@
   }
 </script>
 
-<div class="frame-streamer">
-  <div class="frame-header">
-    <h3>Live Camera Feed</h3>
+<div class="card">
+  <div class="card-header">
+    <div class="title">Live Camera Feed (left camera)</div>
     {#if frameInfo}
       <div class="frame-info">
-        <p>Time: {formatTimestamp(frameInfo.timestamp)}</p>
         <p>Directory: {frameInfo.directory}</p>
       </div>
     {/if}
   </div>
 
-  <div class="frame-container">
     {#if currentFrame}
-      <img src={currentFrame} alt="Camera Frame" class="frame-image" />
+    <div class="frame-container">
+        <img src={currentFrame} alt="Camera Frame" class="frame-image" />
+    </div>
     {:else}
-      <div class="no-frame">
-        <p>No frame data available</p>
-      </div>
+      <p><i>Waiting for images...</i></p>
     {/if}
-  </div>
 </div>
 
 <style>
-  .frame-streamer {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-  }
-
-  .frame-header {
+  .card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .frame-header h3 {
-    margin: 0;
-    color: #333;
+    gap: 0.1rem;
   }
 
   .frame-info {
@@ -117,7 +101,7 @@
     display: block;
   }
 
-  .loading, .no-frame {
+  .no-frame {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,20 +110,8 @@
     background-color: #f0f0f0;
   }
 
-  .loading p, .no-frame p {
+  .no-frame p {
     margin: 0;
     font-style: italic;
-  }
-
-  @media (max-width: 768px) {
-    .frame-header {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .frame-info {
-      text-align: center;
-    }
   }
 </style>

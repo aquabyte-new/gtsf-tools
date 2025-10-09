@@ -65,9 +65,10 @@
 <main>
   <h1>GTSF Monitoring</h1>
 
-  <div class="connection-status">
+  <!-- <div class="connection-status"> -->
+  <div class="card">
     <h3>
-      WebSocket Status: <span class={getStatusClass()}
+      Camera Connection Status: <span class={getStatusClass()}
         >{getStatusMessage()}</span
       >
     </h3>
@@ -77,23 +78,17 @@
 
   <!-- Monitoring Components -->
   {#if connectionStatus === "connected"}
-    <div class="monitoring-grid">
-      <div class="graph-section">
+    <div class="display-grid">
+      <div>
         <MonitoringGraph data={latestData} />
       </div>
-      <div class="frame-section">
-        <FrameStreamer data={latestData} />
-      </div>
+      <FrameStreamer data={latestData} />
       <div class="debug">
         <h4>Raw data:</h4>
         <pre>{JSON.stringify(latestData, null, 2)}</pre>
-
       </div>
     </div>
   {:else if connectionStatus === "connecting"}
-    <div class="card">
-      <p>Connecting to WebSocket server...</p>
-    </div>
   {:else}
     <div class="card error">
       <p>Connection failed. Attempting to reconnect every 5 seconds...</p>
@@ -103,21 +98,11 @@
 </main>
 
 <style>
-  .card {
-    margin: 20px 0;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+  h1 {
+    margin-left: 0.5rem;
   }
-
-  .card.error {
-    border-color: #dc3545;
-    background-color: #f8d7da;
-    color: #721c24;
-  }
-
-  .connection-status {
-    margin: 20px 0;
+  h3 {
+    margin: 0;
   }
 
   .status-connected {
@@ -145,23 +130,11 @@
     font-weight: bold;
   }
 
-  .monitoring-grid {
+  .display-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    /* margin: 20px 0; */
   }
 
-  .graph-section, .frame-section {
-    min-width: 0; /* Prevents grid overflow */
-  }
-
-  @media (max-width: 512px) {
-    .monitoring-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  
   .debug {
     h4 {
       margin-top: 0;

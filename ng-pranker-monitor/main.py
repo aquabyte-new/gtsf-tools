@@ -3,16 +3,17 @@ import json
 import time
 from pathlib import Path
 from typing import Set
+from collections import defaultdict
 
 import websockets
 from loguru import logger
 
+
 BIND_ADDRESS = "0.0.0.0"
 WEBSOCKET_PORT = 8765
-HTTP_PORT = 17171
-
 
 LIVE_DIR = Path("/ssd/captures-live")
+MIN_RANKER_SCORE = 1e-5
 
 
 def latest_dir() -> Path:
@@ -25,12 +26,12 @@ class Producer:
         self.clients: Set[websockets.WebSocketServerProtocol] = set()
         self.running = False
 
-    async def broadcast_metric(self, data):
+    async def broadcast(self, data):
         if self.clients:
             message = json.dumps(data)
             
             try:
-                results = await asyncio.gather(
+                await asyncio.gather(
                     *[client.send(message) for client in self.clients],
                     return_exceptions=True,
                 )
@@ -38,7 +39,8 @@ class Producer:
                 logger.error(f"Broadcast error: {e}")
             
         else:
-            logger.info("No clients to broadcast to")
+            # logger.debug("No clients to broadcast to")
+            pass
 
     async def generate(self):
         latest = None
@@ -50,35 +52,51 @@ class Producer:
                     logger.debug("No new directory found, skipping.")
                     await asyncio.sleep(0.01)
                     continue
-
                 latest = new_dir
+                
+                # Start with empty message.
+                capture_msg = dict(
+                    createdAt=int(time.time() * 1000),
+                    capturedAt=latest.name,
+                )
 
+                # Left frame info.
                 left_thumb = latest / "left_frame.resize_512_512.jpg"
-                right_thumb = latest / "right_frame.resize_512_512.jpg"
-                detections = latest / "biomass_detections.json"
-
-                # Send frame data if available
                 if left_thumb.exists():
-                    logger.info(f"Broadcasting frame: {left_thumb}")
-                    data = {
-                        "type": "frame",
-                        "filename": left_thumb.name,
-                        "directory": left_thumb.parent.name,
-                        "timestamp": int(time.time() * 1000),
-                    }
-                    await self.broadcast_metric(data)
-                else:
-                    continue
+                    capture_msg["leftThumb"] = dict(
+                        filename=left_thumb.name,
+                        directory=left_thumb.parent.name,
+                    )
+                
+                # Right frame info.
+                right_thumb = latest / "right_frame.resize_512_512.jpg"
+                if right_thumb.exists():
+                    capture_msg["rightThumb"] = dict(
+                        filename=right_thumb.name,
+                        directory=right_thumb.parent.name,
+                    )
+                
+                # Biomass detections info.
+                biom_detection = latest / "biomass_detections.json"
+                if biom_detection.exists():
+                    detections = json.loads(biom_detection.read_text())
+
+                    capture_msg["biomass"] = dict(
+                        detections=detections,
+                        classCounts=defaultdict(int),
+                        ranks=[],
+                        goodCrops=0,
+                    )
                     
-                # Send detections data if available
-                if detections.exists():
-                    logger.info(f"Broadcasting detections: {detections}")
-                    data = {
-                        "type": "detections",
-                        "value": json.loads(detections.read_text()),
-                        "timestamp": int(time.time() * 1000),
-                    }
-                    await self.broadcast_metric(data)
+                    for detection in detections:
+                        name = detection['left']['class_name']
+                        max_rank = max(rank or 0 for rank in detection['biomass_ranker'])
+                        capture_msg["biomass"]["classCounts"][name] += 1
+                        capture_msg["biomass"]["ranks"].append(max_rank)
+                        capture_msg["biomass"]["goodCrops"] += (max_rank >= MIN_RANKER_SCORE)
+
+                if 'biomass' in capture_msg:
+                    await self.broadcast(capture_msg)
 
                 sleep_ms = 10
                 await asyncio.sleep(sleep_ms / 1e3)
