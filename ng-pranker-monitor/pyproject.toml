@@ -11,3 +11,8 @@ dependencies = [
     "watchdog>=4.0.2",
     "loguru>=0.7.3",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.0",
+]

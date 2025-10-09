@@ -20,7 +20,7 @@
     
     // Construct the URL for the current frame
     if (frameData.directory && frameData.filename) {
-      const newFrameUrl = `http://localhost:8080/frames/${frameData.directory}/${frameData.filename}`;
+      const newFrameUrl = `http://localhost:17171/${frameData.directory}/${frameData.filename}`;
       
       // Only update if it's a different frame
       if (newFrameUrl !== frameUrl) {
@@ -49,7 +49,6 @@
     <h3>Live Camera Feed</h3>
     {#if frameInfo}
       <div class="frame-info">
-        <p>Frame: {frameInfo.frame_index + 1} / {frameInfo.total_frames}</p>
         <p>Time: {formatTimestamp(frameInfo.timestamp)}</p>
         <p>Directory: {frameInfo.directory}</p>
       </div>

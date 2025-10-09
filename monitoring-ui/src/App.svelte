@@ -3,6 +3,8 @@
   import { WebSocketClient } from "./lib/websocket.svelte.js";
   import MonitoringGraph from "./lib/MonitoringGraph.svelte";
   import FrameStreamer from "./lib/FrameStreamer.svelte";
+  
+  const WS_URL = import.meta.env.VITE_WS_URL;
 
   let websocketClient;
   let connectionStatus = $state("disconnected");
@@ -82,6 +84,11 @@
       <div class="frame-section">
         <FrameStreamer data={latestData} />
       </div>
+      <div class="debug">
+        <h4>Raw data:</h4>
+        <pre>{JSON.stringify(latestData, null, 2)}</pre>
+
+      </div>
     </div>
   {:else if connectionStatus === "connecting"}
     <div class="card">
@@ -142,16 +149,29 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    margin: 20px 0;
+    /* margin: 20px 0; */
   }
 
   .graph-section, .frame-section {
     min-width: 0; /* Prevents grid overflow */
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 512px) {
     .monitoring-grid {
       grid-template-columns: 1fr;
+    }
+  }
+  
+  .debug {
+    h4 {
+      margin-top: 0;
+    }
+    
+    pre {
+      margin: 0;
+      padding: 1rem;
+      background-color: #d2d2d2;
+      border-radius: 8px;
     }
   }
 </style>

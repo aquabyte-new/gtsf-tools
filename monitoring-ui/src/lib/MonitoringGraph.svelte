@@ -44,19 +44,6 @@
         },
       ],
     });
-
-    // Update peaks
-    if (isLow && metricData.val > 9.5) {
-      isLow = false;
-      peaks = peaks + 1;
-    } else if (metricData.val < 0) {
-      isLow = true;
-    }
-
-    // Update backpressure metrics
-    if (metricData.backpressure) {
-      backpressure = metricData.backpressure;
-    }
   }
 
   onMount(() => {
@@ -66,7 +53,7 @@
     // Set initial chart options
     chart.setOption({
       title: {
-        text: "Noisy Sine Wave Live Data",
+        text: "Live Pranker Data",
       },
       tooltip: {
         trigger: "axis",
@@ -82,12 +69,10 @@
       yAxis: {
         type: "value",
         name: "Value",
-        min: -15,
-        max: 15,
       },
       series: [
         {
-          name: "noisy_sine_wave",
+          name: "live_pranker_data",
           type: "line",
           data: [],
           smooth: true,
@@ -105,21 +90,8 @@
 </script>
 
 <div class="monitoring-graph">
-  <div>
-    <h1>Peaks: {peaks}</h1>
-  </div>
-
   <div class="chart-container">
     <div bind:this={chartContainer} style="width: 100%; height: 400px;"></div>
-  </div>
-
-  <div class="metrics">
-    <h4>Backpressure Metrics:</h4>
-    <p>Clients: {backpressure.client_count}</p>
-    <p>Avg Send Delay: {backpressure.avg_send_delay}s</p>
-    <p>Failure Rate: {(backpressure.failure_rate * 100).toFixed(2)}%</p>
-    <p>Messages Sent: {backpressure.messages_sent}</p>
-    <p>Messages Failed: {backpressure.messages_failed}</p>
   </div>
 </div>
 
@@ -130,31 +102,9 @@
     gap: 20px;
   }
 
-  .stats {
-    display: flex;
-    gap: 30px;
-    align-items: flex-start;
-  }
-
   .chart-container {
     border: 1px solid #ccc;
     border-radius: 8px;
     padding: 20px;
-  }
-
-  .metrics {
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    min-width: 250px;
-  }
-
-  .metrics h4 {
-    margin-top: 0;
-  }
-
-  .metrics p {
-    margin: 5px 0;
   }
 </style>

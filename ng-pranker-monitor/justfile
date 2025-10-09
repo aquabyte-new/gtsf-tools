@@ -17,10 +17,17 @@ DATE_TAG := PROJ + '-' + shell('date -I')
     uv sync
 
 
+# Format code
+@fmt:
+    uv run ruff check --select I --fix *.py
+    uv run ruff format *.py
+
+
 # Build image
 @build:
+    echo Building docker image...
     tar -czhf ui.tar.gz --dereference ui-dist
-    docker build -t {{PROJ}} .
+    docker build -q -t {{PROJ}} .
     
 
 # Run the docker container locally
@@ -34,8 +41,11 @@ DATE_TAG := PROJ + '-' + shell('date -I')
 
 # Release the image to ECR
 @release: build
-    for tag in {{LATEST_TAG}} {{DATE_TAG}}; do \
-        echo Pushing ${tag}...; \
-        docker tag {{PROJ}} "{{ECR_REPO}}:${tag}"; \
-        docker push "{{ECR_REPO}}:${tag}"; \
-    done
+    # for tag in {{LATEST_TAG}} {{DATE_TAG}}; do \
+    #     echo Pushing ${tag}...; \
+    #     docker tag {{PROJ}} "{{ECR_REPO}}:${tag}"; \
+    #     docker push -q "{{ECR_REPO}}:${tag}"; \
+    # done
+    echo Pushing {{LATEST_TAG}}...
+    docker tag {{PROJ}} "{{ECR_REPO}}:{{LATEST_TAG}}"
+    docker push -q "{{ECR_REPO}}:{{LATEST_TAG}}"

@@ -1,147 +1,120 @@
 import asyncio
 import json
-import math
-import random
 import time
-import websockets
-import os
 from pathlib import Path
 from typing import Set
-from aiohttp import web
-import aiohttp_cors
+
+import websockets
 from loguru import logger
 
+BIND_ADDRESS = "0.0.0.0"
+WEBSOCKET_PORT = 8765
+HTTP_PORT = 17171
 
-class MetricProducer:
+
+LIVE_DIR = Path("/ssd/captures-live")
+
+
+def latest_dir() -> Path:
+    dirs = LIVE_DIR.glob("*-*-*T*:*:*Z")
+    return sorted(dirs)[-1]
+
+
+class Producer:
     def __init__(self):
         self.clients: Set[websockets.WebSocketServerProtocol] = set()
         self.running = False
-    
+
     async def broadcast_metric(self, data):
         if self.clients:
             message = json.dumps(data)
-            
+
             try:
                 results = await asyncio.gather(
                     *[client.send(message) for client in self.clients],
-                    return_exceptions=True
+                    return_exceptions=True,
                 )
             except Exception as e:
                 logger.error(f"Broadcast error: {e}")
-    
 
-    async def generate_noisy_sine_wave(self):
-        """Generate noisy sine wave data"""
-        t = 0
+    async def generate(self):
+        latest = None
         while self.running:
-            # Generate sine wave with noise
-            sine_value = math.sin(t) * 10  # Amplitude of 10
-            noise = random.uniform(-0.3, .3)  # Random noise between -2 and 2
-            value = sine_value + noise
-            
-            # Calculate backpressure metrics
-            avg_delay = sum(self.stats['send_delays']) / len(self.stats['send_delays']) if self.stats['send_delays'] else 0
-            failure_rate = self.stats['messages_failed'] / (self.stats['messages_sent'] + self.stats['messages_failed']) if (self.stats['messages_sent'] + self.stats['messages_failed']) > 0 else 0
-            
+            # Get the latest directory and make sure we don't double count.
+            new_dir = latest_dir()
+            if new_dir == latest:
+                continue
+            latest = new_dir
+
+            left_thumb = latest / "left_frame.resize_512_512.jpg"
+            right_thumb = latest / "right_frame.resize_512_512.jpg"
+            detections = latest / "biomass_detections.json"
+
             # Create metric data
             metric_data = {
-                "name": "noisy_sine_wave",
-                "val": round(value, 2),
+                "name": "test_metric",
+                "val": 0.0,
                 "timestamp": int(time.time() * 1000),  # milliseconds
-                "backpressure": {
-                    "avg_send_delay": round(avg_delay, 4),
-                    "failure_rate": round(failure_rate, 4),
-                    "client_count": self.stats['client_count'],
-                    "messages_sent": self.stats['messages_sent'],
-                    "messages_failed": self.stats['messages_failed']
-                }
             }
-            
-            await self.broadcast_metric(metric_data)
-            
+
+            # await self.broadcast_metric(metric_data)
+
             # Send frame data if available
-            if self.frame_files:
-                await self.broadcast_frame()
-            
-            t += 0.1
-            await asyncio.sleep(0.125)  # Send data every n seconds
-    
-    async def broadcast_frame(self):
-        """Broadcast current frame information"""
-        if not self.frame_files:
-            return
-            
-        frame_path = self.frame_files[self.current_frame_index]
-        frame_filename = os.path.basename(frame_path)
-        frame_dir = os.path.basename(os.path.dirname(frame_path))
-        
-        frame_data = {
-            "type": "frame",
-            "filename": frame_filename,
-            "directory": frame_dir,
-            "timestamp": int(time.time() * 1000),
-            "frame_index": self.current_frame_index,
-            "total_frames": len(self.frame_files)
-        }
-        
-        await self.broadcast_metric(frame_data)
-        
-        # Move to next frame
-        self.current_frame_index = (self.current_frame_index + 1) % len(self.frame_files)
-    
+            if left_thumb.exists():
+                logger.info(f"Broadcasting frame: {left_thumb}")
+                data = {
+                    "type": "frame",
+                    "filename": left_thumb.name,
+                    "directory": left_thumb.parent.name,
+                    "timestamp": int(time.time() * 1000),
+                }
+                await self.broadcast_metric(data)
+                
+            # Send detections data if available
+            if detections.exists():
+                logger.info(f"Broadcasting detections: {detections}")
+                data = {
+                    "type": "detections",
+                    "value": json.load(detections.read_text()),
+                    "timestamp": int(time.time() * 1000),
+                }
+                await self.broadcast_metric(data)
+
+            sleep_ms = 10
+            await asyncio.sleep(sleep_ms / 1e3)
+
     async def handle_client(self, websocket, path):
+        logger.info("New client connected.")
         self.clients.add(websocket)
         try:
             await websocket.wait_closed()
         finally:
+            logger.info("Client disconnected.")
             self.clients.discard(websocket)
-    
+
     async def start_server(self):
         self.running = True
-        print("Starting WebSocket server on localhost:8765")
-        print("Starting HTTP server on localhost:8080")
-        
+
         # Start the metric generation task
-        metric_task = asyncio.create_task(self.generate_noisy_sine_wave())
-        
-        # Start HTTP server for serving static files
-        app = web.Application()
-        
-        # Configure CORS
-        cors = aiohttp_cors.setup(app, defaults={
-            "*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
-                expose_headers="*",
-                allow_headers="*",
-                allow_methods="*"
-            )
-        })
-        
-        # Serve static files from test-data directory
-        app.router.add_static('/frames/', path='test-data', name='frames')
-        
-        # Add CORS to all routes
-        for route in list(app.router.routes()):
-            cors.add(route)
-        
-        # Start HTTP server
-        http_server = web.AppRunner(app)
-        await http_server.setup()
-        http_site = web.TCPSite(http_server, 'localhost', 8080)
-        await http_site.start()
-        
+        logger.info("Starting metric generation...")
+        metric_task = asyncio.create_task(self.generate())
+
         # Start the WebSocket server
-        async with websockets.serve(self.handle_client, "localhost", 8765):
-            print("WebSocket server running on ws://localhost:8765")
-            print("HTTP server running on http://localhost:8080")
-            print("Frames available at http://localhost:8080/frames/")
+        async with websockets.serve(self.handle_client, BIND_ADDRESS, WEBSOCKET_PORT):
+            logger.info(
+                f"WebSocket server running on ws://{BIND_ADDRESS}:{WEBSOCKET_PORT}"
+            )
             await asyncio.Future()  # Run forever
 
 
 async def main():
-    producer = MetricProducer()
+    logger.info("Creating producer...")
+    producer = Producer()
+
+    logger.info("Starting server...")
     await producer.start_server()
 
 
 if __name__ == "__main__":
+    logger.info("Starting ng-pranker-monitor...")
     asyncio.run(main())
