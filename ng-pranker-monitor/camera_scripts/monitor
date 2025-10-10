@@ -1,0 +1,13 @@
+#!/bin/bash
+REPO=286712564201.dkr.ecr.eu-west-1.amazonaws.com/research
+TAG=hh-gtsf-monitor-latest
+
+docker run \
+	--rm \
+	--tty \
+	--interactive \
+	--workdir /app \
+	--network host \
+	--name monitor \
+	-v /ssd/captures-live:/ssd/captures-live \
+	$REPO:$TAG 'uv run main.py'

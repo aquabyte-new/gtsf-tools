@@ -20,8 +20,7 @@ RUN tar -xzf ui.tar.gz && rm ui.tar.gz
 
 # Add the app.
 WORKDIR /app
-COPY demo.py .
 COPY main.py .
-COPY run.sh .
+COPY serve.sh .
 
 ENTRYPOINT ["/bin/bash", "-c"]

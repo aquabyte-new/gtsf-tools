@@ -79,9 +79,7 @@
   <!-- Monitoring Components -->
   {#if connectionStatus === "connected"}
     <div class="display-grid">
-      <div>
-        <MonitoringGraph data={latestData} />
-      </div>
+      <MonitoringGraph data={latestData} />
       <FrameStreamer data={latestData} />
       <div class="debug">
         <h4>Raw data:</h4>

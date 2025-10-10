@@ -1,0 +1,14 @@
+#!/bin/bash
+REPO=286712564201.dkr.ecr.eu-west-1.amazonaws.com/research
+TAG=hh-gtsf-monitor-latest
+
+docker run \
+	--rm \
+	--tty \
+	--interactive \
+	--workdir /app \
+	--network host \
+	--name monitor-ui \
+	-v /ssd/captures:/ssd/captures \
+	-v /ssd/captures-live:/ssd/captures-live \
+	$REPO:$TAG ./serve.sh
