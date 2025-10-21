@@ -48,4 +48,4 @@ DATE_TAG := PROJ + '-' + shell('date -I')
     # done
     echo Pushing {{LATEST_TAG}}...
     docker tag {{PROJ}} "{{ECR_REPO}}:{{LATEST_TAG}}"
-    docker push -q "{{ECR_REPO}}:{{LATEST_TAG}}"
+    docker push "{{ECR_REPO}}:{{LATEST_TAG}}"

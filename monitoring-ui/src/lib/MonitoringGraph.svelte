@@ -14,6 +14,8 @@
     PARTIAL: 0,
   });
 
+  const goodCropCount = $state(0);
+
   const lines = {
     HIGH: [],
     LOW: [],
@@ -142,6 +144,17 @@
 </script>
 
 <div>
+  {#if goodCropCount > 20}
+    <div class="card success">
+      <div>Good crop count: {goodCropCount}</div>
+      <div>Enough crops captured!</div>
+    </div>
+  {:else}
+    <div class="card error">
+      <div>Good crop count: {goodCropCount}</div>
+      <div>Not enough crops captured.</div>
+    </div>
+  {/if}
   <div class="card">
     <div>HIGH: {classCounts["HIGH"]}</div>
     <div>MEDIUM: {classCounts["MEDIUM"]}</div>

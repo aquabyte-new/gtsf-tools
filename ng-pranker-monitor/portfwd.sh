@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # SSH host
-HOST=${1:-hh}
+HOST=${1:-bergen}
 
 echo "Forwarding ports to $HOST ..."
 

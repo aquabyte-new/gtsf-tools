@@ -53,6 +53,8 @@ class Producer:
                     await asyncio.sleep(0.01)
                     continue
                 latest = new_dir
+
+                logger.info("New directory found.")
                 
                 # Start with empty message.
                 capture_msg = dict(
@@ -63,6 +65,7 @@ class Producer:
                 # Left frame info.
                 left_thumb = latest / "left_frame.resize_512_512.jpg"
                 if left_thumb.exists():
+                    logger.info("Left thumb exists.")
                     capture_msg["leftThumb"] = dict(
                         filename=left_thumb.name,
                         directory=left_thumb.parent.name,

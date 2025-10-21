@@ -27,6 +27,12 @@ button {
   color: #721c24;
 }
 
+.card.success {
+  border-color: #28a745;
+  background-color: #d4edda;
+  color: #155724;
+}
+
 .title {
   font-size: 1.2rem;
   font-weight: bold;

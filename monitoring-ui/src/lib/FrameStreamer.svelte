@@ -238,8 +238,8 @@
 
   .frame-container {
     position: relative;
-    width: 100%;
-    max-width: 640px;
+    width: 620px;
+    height: 512px;
     margin: 0 auto;
     border: 2px solid #ddd;
     border-radius: 4px;
@@ -248,9 +248,10 @@
   }
 
   .frame-image {
-    width: 100%;
-    height: auto;
+    width: 620px;
+    height: 512px;
     display: block;
+    object-fit: fill;
   }
 
   .bounding-box-canvas {
