@@ -6,6 +6,7 @@
     isLengthValid,
     isWidthValid,
     isBreadthValid,
+    isCircumferenceValid,
   } from "$lib/validation.js";
 
   let { fish = null, onClose } = $props();
@@ -15,6 +16,7 @@
   let editedLength = $state('');
   let editedWidth = $state('');
   let editedBreadth = $state('');
+  let editedCircumference = $state('');
 
   // Validation state
   const weightValid = $derived(isWeightValid(editedWeight ? parseFloat(editedWeight) : null));
@@ -30,6 +32,10 @@
     editedWeight ? parseFloat(editedWeight) : null,
     editedBreadth ? parseFloat(editedBreadth) : null
   ));
+  const circumferenceValid = $derived(isCircumferenceValid(
+    editedLength ? parseFloat(editedLength) : null,
+    editedCircumference ? parseFloat(editedCircumference) : null
+  ));
 
   // Initialize edit values when fish changes
   $effect(() => {
@@ -38,6 +44,7 @@
       editedLength = fish.length?.toString() || '';
       editedWidth = fish.width?.toString() || '';
       editedBreadth = fish.breadth?.toString() || '';
+      editedCircumference = fish.circumference?.toString() || '';
     }
   });
 
@@ -77,6 +84,7 @@
     editedLength = fish.length?.toString() || '';
     editedWidth = fish.width?.toString() || '';
     editedBreadth = fish.breadth?.toString() || '';
+    editedCircumference = fish.circumference?.toString() || '';
   }
 
   function saveChanges() {
@@ -84,6 +92,7 @@
     const length = editedLength ? parseFloat(editedLength) : null;
     const width = editedWidth ? parseFloat(editedWidth) : null;
     const breadth = editedBreadth ? parseFloat(editedBreadth) : null;
+    const circumference = editedCircumference ? parseFloat(editedCircumference) : null;
 
     // Validation with confirmation dialogs (same as MeasurementStage)
     const check = (msg) => confirm(msg + ", are you sure you want to save?");
@@ -91,6 +100,7 @@
     if (!isLengthValid(weight, length) && !check("Length is unusual")) return;
     if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
     if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual")) return;
+    if (!isCircumferenceValid(length, circumference) && !check("Circumference is unusual")) return;
 
     // Find the fish in entries and update it
     const fishIndex = entries.findIndex(f => f.id === fish.id);
@@ -100,16 +110,18 @@
         weight: weight,
         length: length,
         width: width,
-        breadth: breadth
+        breadth: breadth,
+        circumference: circumference
       };
-      
+
       // Update the fish prop reference
       fish.weight = weight;
       fish.length = length;
       fish.width = width;
       fish.breadth = breadth;
+      fish.circumference = circumference;
     }
-    
+
     isEditing = false;
   }
 </script>
@@ -178,27 +190,39 @@
                 />
               </div>
               <div class="edit-row">
-                <label for="width-input" class="edit-label">Width (mm):</label>
-                <input 
+                <label for="width-input" class="edit-label">Height (mm):</label>
+                <input
                   id="width-input"
-                  type="number" 
-                  step="1" 
-                  bind:value={editedWidth} 
+                  type="number"
+                  step="1"
+                  bind:value={editedWidth}
                   class="edit-input"
                   class:invalid={editedWidth && !widthValid}
-                  placeholder="Enter width"
+                  placeholder="Enter height"
                 />
               </div>
               <div class="edit-row">
                 <label for="breadth-input" class="edit-label">Breadth (mm):</label>
-                <input 
+                <input
                   id="breadth-input"
-                  type="number" 
-                  step="1" 
-                  bind:value={editedBreadth} 
+                  type="number"
+                  step="1"
+                  bind:value={editedBreadth}
                   class="edit-input"
                   class:invalid={editedBreadth && !breadthValid}
                   placeholder="Enter breadth"
+                />
+              </div>
+              <div class="edit-row">
+                <label for="circumference-input" class="edit-label">Circumference (mm):</label>
+                <input
+                  id="circumference-input"
+                  type="number"
+                  step="1"
+                  bind:value={editedCircumference}
+                  class="edit-input"
+                  class:invalid={editedCircumference && !circumferenceValid}
+                  placeholder="Enter circumference"
                 />
               </div>
               <div class="edit-actions">
@@ -216,12 +240,16 @@
               <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Width:</span>
+              <span class="label">Height:</span>
               <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Breadth:</span>
               <span class="value">{fish.breadth ?? "N/A"} {fish.breadth ? "mm" : ""}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Circumference:</span>
+              <span class="value">{fish.circumference ?? "N/A"} {fish.circumference ? "mm" : ""}</span>
             </div>
           {/if}
         </div>
