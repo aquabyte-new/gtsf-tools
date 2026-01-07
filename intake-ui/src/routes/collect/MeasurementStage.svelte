@@ -111,7 +111,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="width">Width:</label>
+        <label for="width">Height:</label>
         <input
           type="number"
           id="length"

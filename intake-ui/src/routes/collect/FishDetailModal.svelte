@@ -178,15 +178,15 @@
                 />
               </div>
               <div class="edit-row">
-                <label for="width-input" class="edit-label">Width (mm):</label>
-                <input 
+                <label for="width-input" class="edit-label">Height (mm):</label>
+                <input
                   id="width-input"
-                  type="number" 
-                  step="1" 
-                  bind:value={editedWidth} 
+                  type="number"
+                  step="1"
+                  bind:value={editedWidth}
                   class="edit-input"
                   class:invalid={editedWidth && !widthValid}
-                  placeholder="Enter width"
+                  placeholder="Enter height"
                 />
               </div>
               <div class="edit-row">
@@ -216,7 +216,7 @@
               <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Width:</span>
+              <span class="label">Height:</span>
               <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
