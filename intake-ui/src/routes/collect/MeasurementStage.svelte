@@ -9,6 +9,7 @@
     isLengthValid,
     isWidthValid,
     isBreadthValid,
+    isCircumferenceValid,
   } from "$lib/validation.js";
   import ActiveFish from "$lib/ActiveFish.svelte";
   import BoardIcon from "$lib/assets/measuring-icon-2.jpeg";
@@ -21,6 +22,7 @@
   let length = $state("");
   let width = $state("");
   let breadth = $state("");
+  let circumference = $state("");
   let notes = $state("");
 
   // submit entry and release fish
@@ -31,6 +33,8 @@
     if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
     if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual"))
       return;
+    if (!isCircumferenceValid(length, circumference) && !check("Circumference is unusual"))
+      return;
 
     stages.measurement = {
       ...stages.measurement,
@@ -39,6 +43,7 @@
       length: length,
       width: width,
       breadth: breadth,
+      circumference: circumference,
       notes: notes,
     };
 
@@ -63,6 +68,7 @@
     length = "";
     width = "";
     breadth = "";
+    circumference = "";
     notes = "";
   }
 
@@ -126,6 +132,16 @@
           type="number"
           id="length"
           bind:value={breadth}
+          step="1"
+          placeholder="mm"
+        />
+      </div>
+      <div class="form-group">
+        <label for="circumference">Circumference:</label>
+        <input
+          type="number"
+          id="circumference"
+          bind:value={circumference}
           step="1"
           placeholder="mm"
         />
