@@ -1,25 +1,45 @@
-from datetime import datetime, timezone
-from io import BytesIO, StringIO
+from datetime import datetime
+from contextlib import asynccontextmanager
 
-import aioboto3
-import numpy as np
-import pandas as pd
+import asyncpg
 from loguru import logger
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from s3path import S3Path
 
-SAVE_DIR = S3Path("/aquabyte-datasets/gtsf-intake")
-s3_session = aioboto3.Session()
+# Database connection pool
+db_pool = None
 
 
 class SaveRequest(BaseModel):
     collectionName: str
+    collectionPenId: str
+    collectionSpecies: str
+    collectionLocation: str | None = None
+    collectionNotes: str | None = None
     fish: list[dict]
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage database connection pool lifecycle."""
+    global db_pool
+    logger.info("Connecting to PostgreSQL database...")
+    db_pool = await asyncpg.create_pool(
+        host="localhost",
+        database="postgres",
+        user="sam",
+        min_size=1,
+        max_size=10,
+    )
+    logger.info("Database connection pool created.")
+    yield
+    logger.info("Closing database connection pool...")
+    await db_pool.close()
+    logger.info("Database connection pool closed.")
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Add CORS middleware to allow requests from the UI
 app.add_middleware(
@@ -29,27 +49,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-async def save_csv(df: pd.DataFrame, s3_path: S3Path, index: bool = True):
-    """Save a DataFrame to S3 as a CSV file."""
-    csv_buffer = StringIO()
-    df.to_csv(csv_buffer, index=index)
-
-    async with s3_session.client("s3") as s3:
-        await s3.put_object(
-            Bucket=s3_path.bucket,
-            Key=s3_path.key,
-            Body=csv_buffer.getvalue()
-        )
-
-
-async def read_csv(s3_path: S3Path) -> pd.DataFrame:
-    """Read a CSV file from S3 into a DataFrame."""
-    async with s3_session.client("s3") as s3:
-        response = await s3.get_object(Bucket=s3_path.bucket, Key=s3_path.key)
-        body = await response["Body"].read()
-        return pd.read_csv(BytesIO(body))
 
 
 @app.get("/")
@@ -63,73 +62,141 @@ async def save(request: SaveRequest):
 
     if len(request.fish) == 0:
         logger.warning("No fish to save.")
-        return
+        return {"status": "ok", "message": "No fish to save"}
 
-    # Load data into a DataFrame.
-    df = pd.DataFrame(request.fish)
-    print(df)
+    async with db_pool.acquire() as conn:
+        async with conn.transaction():
+            # Insert or update collection
+            collection_id = await conn.fetchval(
+                """
+                INSERT INTO gtsf_collections (name, pen_id, species, location, notes)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (name) DO UPDATE SET
+                    pen_id = EXCLUDED.pen_id,
+                    species = EXCLUDED.species,
+                    location = EXCLUDED.location,
+                    notes = EXCLUDED.notes,
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING id
+                """,
+                request.collectionName,
+                request.collectionPenId,
+                request.collectionSpecies,
+                request.collectionLocation,
+                request.collectionNotes,
+            )
 
-    # Save to CSV in S3.
-    collection_dir = SAVE_DIR / request.collectionName.replace(" ", "_").lower()
+            # Delete existing fish for this collection (we're replacing them)
+            await conn.execute(
+                "DELETE FROM gtsf_fish WHERE collection_id = $1",
+                collection_id
+            )
 
-    # Save latest CSV (with index).
-    await save_csv(df, collection_dir / "gtsf_latest.csv", index=True)
+            # Insert all fish
+            fish_records = []
+            for fish in request.fish:
+                fish_records.append((
+                    collection_id,
+                    fish.get("fishId"),
+                    float(fish["weight"]),
+                    float(fish["length"]),
+                    float(fish.get("width")) if fish.get("width") else None,
+                    float(fish.get("breadth")) if fish.get("breadth") else None,
+                    float(fish.get("circumference")) if fish.get("circumference") else None,
+                    datetime.fromisoformat(fish["intakeStart"].replace("Z", "+00:00")),
+                    datetime.fromisoformat(fish["intakeEnd"].replace("Z", "+00:00")),
+                    datetime.fromisoformat(fish["sedationEnd"].replace("Z", "+00:00")),
+                    datetime.fromisoformat(fish["measurementEnd"].replace("Z", "+00:00")),
+                    fish.get("notes"),
+                ))
 
-    # Save timestamped CSV (without index).
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    await save_csv(df, collection_dir / f"gtsf_{ts}.csv", index=False)
+            await conn.executemany(
+                """
+                INSERT INTO gtsf_fish (
+                    collection_id, fish_id, weight_g, length_mm, width_mm, breadth_mm,
+                    circumference, intake_start, intake_end, sedation_end, measurement_end, notes
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                """,
+                fish_records
+            )
 
-    logger.info(f"Saved {len(request.fish)} fish to S3.")
+    logger.info(f"Saved {len(request.fish)} fish to database.")
+    return {"status": "ok", "message": f"Saved {len(request.fish)} fish"}
     
 
 @app.get("/collections")
 async def collections():
-    async with s3_session.client("s3") as s3:
-        # List all objects in the S3 bucket under SAVE_DIR prefix.
-        paginator = s3.get_paginator("list_objects_v2")
-        pages = paginator.paginate(Bucket=SAVE_DIR.bucket, Prefix=SAVE_DIR.key + "/")
+    async with db_pool.acquire() as conn:
+        # Query collections with aggregated fish data
+        rows = await conn.fetch(
+            """
+            SELECT
+                c.name,
+                COUNT(f.collection_id) as num_fish,
+                AVG(f.weight_g) as avg_weight
+            FROM gtsf_collections c
+            LEFT JOIN gtsf_fish f ON c.id = f.collection_id
+            GROUP BY c.id, c.name
+            ORDER BY c.name
+            """
+        )
 
-        collection_names = set()
-        async for page in pages:
-            if "Contents" not in page:
-                continue
-            for obj in page["Contents"]:
-                key = obj["Key"]
-                if key.endswith("/gtsf_latest.csv"):
-                    # Extract collection name from path like "gtsf-intake/collection_name/gtsf_latest.csv"
-                    parts = key.split("/")
-                    if len(parts) >= 2:
-                        collection_names.add(parts[-2])
+    collections = [
+        {
+            "name": row["name"],
+            "numFish": row["num_fish"],
+            "avgWeight": float(row["avg_weight"]) if row["avg_weight"] is not None else 0.0,
+        }
+        for row in rows
+    ]
 
-    # Read data for each collection.
-    collections = []
-    for collection_name in sorted(collection_names):
-        try:
-            df = await read_csv(SAVE_DIR / collection_name / "gtsf_latest.csv")
-            collections.append({
-                "name": collection_name,
-                "numFish": len(df),
-                "avgWeight": df["weight"].mean(),
-            })
-        except Exception as e:
-            logger.warning(f"Failed to read collection {collection_name}: {e}")
-            continue
-
-    print(collections)
+    logger.info(f"Retrieved {len(collections)} collections.")
     return collections
 
 
 @app.get("/collection/{collection_name}")
 async def collection(collection_name: str):
-    entries = await read_csv(SAVE_DIR / collection_name / "gtsf_latest.csv")
+    async with db_pool.acquire() as conn:
+        # Get collection ID
+        collection_id = await conn.fetchval(
+            "SELECT id FROM gtsf_collections WHERE name = $1",
+            collection_name
+        )
 
-    if "Unnamed: 0" in entries.columns:
-        entries = entries.drop(columns=["Unnamed: 0"])
+        if collection_id is None:
+            raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found")
 
-    entries = (
-        entries
-        .replace({np.nan:None})
-        .to_dict(orient="records")
-    )
+        # Get all fish for this collection
+        rows = await conn.fetch(
+            """
+            SELECT
+                fish_id as "fishId",
+                weight_g as weight,
+                length_mm as length,
+                width_mm as width,
+                breadth_mm as breadth,
+                circumference,
+                intake_start as "intakeStart",
+                intake_end as "intakeEnd",
+                sedation_end as "sedationEnd",
+                measurement_end as "measurementEnd",
+                notes
+            FROM gtsf_fish
+            WHERE collection_id = $1
+            ORDER BY created_at
+            """,
+            collection_id
+        )
 
+    # Convert to dict and handle None values
+    entries = []
+    for row in rows:
+        entry = dict(row)
+        # Convert datetime objects to ISO format strings
+        for key in ["intakeStart", "intakeEnd", "sedationEnd", "measurementEnd"]:
+            if entry[key] is not None:
+                entry[key] = entry[key].isoformat()
+        entries.append(entry)
+
+    logger.info(f"Retrieved {len(entries)} fish from collection '{collection_name}'.")
     return entries
