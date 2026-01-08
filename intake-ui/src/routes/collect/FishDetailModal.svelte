@@ -233,23 +233,23 @@
           {:else}
             <div class="detail-row">
               <span class="label">Weight:</span>
-              <span class="value">{fish.weight ? `${fish.weight} g` : "N/A"}</span>
+              <span class="value">{fish.weight ?? "N/A"} {fish.weight ? "g" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Length:</span>
-              <span class="value">{fish.length ? `${fish.length} mm` : "N/A"}</span>
+              <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Height:</span>
-              <span class="value">{fish.width ? `${fish.width} mm` : "N/A"}</span>
+              <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Breadth:</span>
-              <span class="value">{fish.breadth ? `${fish.breadth} mm` : "N/A"}</span>
+              <span class="value">{fish.breadth ?? "N/A"} {fish.breadth ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Circumference:</span>
-              <span class="value">{fish.circumference ? `${fish.circumference} mm` : "N/A"}</span>
+              <span class="value">{fish.circumference ?? "N/A"} {fish.circumference ? "mm" : ""}</span>
             </div>
           {/if}
         </div>
