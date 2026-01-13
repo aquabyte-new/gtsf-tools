@@ -73,3 +73,18 @@ export function isBreadthValid(weight_g, breadth_mm) {
     // Return true if all validations pass
     return true;
 }
+
+
+export function isCircumferenceValid(length_mm, circumference_mm) {
+    // Optional
+    if (circumference_mm === null || circumference_mm === "") return true;
+
+    // Must be positive
+    if (circumference_mm <= 0) return false;
+
+    // Must be less than length
+    if (length_mm && circumference_mm >= length_mm) return false;
+
+    // Return true if all validations pass
+    return true;
+}
