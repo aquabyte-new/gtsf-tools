@@ -27,6 +27,7 @@ const defaultSamplingInfo = {
     species: 'atlantic_salmon',
     location: 'bergen_workshop',
     notes: null,
+    collectionId: null,
 };
 function loadSamplingInfo() {
     if (typeof window === 'undefined') {
@@ -65,4 +66,5 @@ export function clearAppState() {
     // Only reset some of the sampling info.
     samplingInfo.name = defaultSamplingInfo.name;
     samplingInfo.notes = defaultSamplingInfo.notes;
+    samplingInfo.collectionId = null;
 }

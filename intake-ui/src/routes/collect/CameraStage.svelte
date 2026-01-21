@@ -18,8 +18,8 @@
 
     function addFish() {
         stages.camera = {
-            cameraStartTime: Date.now(),
-            id: generateID(),
+            captureStart: Date.now(),
+            fishId: generateID(),
             iconIdx: getUnusedFishIconIdx(),
         };
     }
@@ -30,7 +30,7 @@
             return;
         }
 
-        stages.camera.cameraEndTime = Date.now();
+        stages.camera.captureEnd = Date.now();
         stages.sedation = stages.camera;
         stages.camera = null;
     }
@@ -47,7 +47,7 @@
     {#if cameraStageActive()}
         <ActiveFish {iconIdx} />
         <div class="timer-container">
-            <Timer startTime={stages.camera.cameraStartTime}/>
+            <Timer startTime={stages.camera.captureStart}/>
         </div>
         <div class="button-container">
             {#if sedationStageActive()}
