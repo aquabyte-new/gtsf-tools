@@ -15,7 +15,7 @@
     function getIcon() {
         if (usePlain) {
             return plainFish;
-        } else if (iconIdx !== null) {
+        } else if (iconIdx != null && prettyFish[iconIdx]) {
             return prettyFish[iconIdx];
         } else {
             return getRandomFishIcon();

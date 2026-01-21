@@ -1,13 +1,12 @@
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import Database
-from schemas import SaveRequest, Collection, Fish
-
-# Database instance
-db = Database()
+from db import db
+from api.collections import router as collections_router
+from api.samples import router as samples_router
 
 
 @asynccontextmanager
@@ -29,34 +28,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Set up API routes
+api_router = APIRouter(prefix="/api")
+api_router.include_router(collections_router, prefix="/collections")
+api_router.include_router(samples_router, prefix="/samples")
+app.include_router(api_router)
 
-@app.get("/")
-def ping():
-    """Health check endpoint."""
-    return {"message": "GTSF backend is running."}
-
-
-@app.post("/save")
-async def save(request: SaveRequest) -> dict:
-    """Save collection and fish data."""
-    return await db.save_collection(request)
-
-
-@app.get("/collections")
-async def collections() -> list[Collection]:
-    """Get all collections with summary statistics."""
-    return await db.get_collections()
-
-
-@app.get("/collection/{collection_name}")
-async def collection(collection_name: str) -> list[Fish]:
-    """Get all fish data for a specific collection."""
-    fish_list = await db.get_collection_fish(collection_name)
-
-    if fish_list is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Collection '{collection_name}' not found"
-        )
-
-    return fish_list
+# Some other helpers.
+@app.get("/environment")
+async def get_environment() -> str:
+    return os.environ.get("ENV", "local")

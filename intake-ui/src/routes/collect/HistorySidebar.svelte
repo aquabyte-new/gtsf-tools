@@ -34,7 +34,7 @@
             <FishIcon iconIdx={fish.iconIdx} />
             <strong>Fish {entries.length - index}</strong>
             -
-            <i>{fish.weight}g</i>
+            <i>{fish.weightG}g</i>
           </div>
         </div>
       {/each}

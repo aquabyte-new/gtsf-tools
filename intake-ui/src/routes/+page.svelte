@@ -1,62 +1,81 @@
 <script>
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
-    import { clearAppState, entries, samplingInfo } from '$lib/state.svelte.js';
+    import { onMount } from "svelte";
+    import { goto } from "$app/navigation";
+    import { clearAppState, samplingInfo } from "$lib/state.svelte.js";
+    import IntakeModal from "./collect/IntakeModal.svelte";
 
     let collections = $state([]);
-    const apiUrl = import.meta.env.VITE_API_URL;
+    let showModal = $state(false);
+    const apiUrl = `${import.meta.env.VITE_API_URL}/api`;
 
     onMount(async () => {
         try {
             const response = await fetch(`${apiUrl}/collections`);
             collections = await response.json();
         } catch (error) {
-            console.error('Failed to load collections:', error);
+            console.error("Failed to load collections:", error);
         }
     });
 
-    async function openCollection(collectionName) {
-        try {
-            // Fetch collection data from API
-            const response = await fetch(`${apiUrl}/collection/${collectionName}`);
-            const collectionEntries = await response.json();
-            
-            // Load data into state
-            entries.splice(0, entries.length, ...collectionEntries);
-            
-            // Update sampling info with collection name
-            samplingInfo.name = collectionName;
-            
-            // Navigate to collect page
-            goto('/collect');
-        } catch (error) {
-            console.error('Failed to load collection:', error);
-            alert('Failed to load collection. Please try again.');
-        }
+    function openCollection(collectionId) {
+        goto(`/collect/${collectionId}`);
     }
 
     function newCollection() {
         clearAppState();
-        goto('/collect');
+        showModal = true;
+    }
+
+    async function createCollection() {
+        const response = await fetch(`${apiUrl}/collections/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(samplingInfo),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to create collection. Please try again.");
+        }
+
+        const result = await response.json();
+        samplingInfo.collectionId = result.collectionId;
+
+        goto(`/collect/${result.collectionId}`);
     }
 </script>
 
 <main>
     <div class="header">
         <h1>Collection history</h1>
-        <button class="new-collection-btn" onclick={newCollection}>New Collection</button>
+        <button class="new-collection-btn" onclick={newCollection}
+            >New Collection</button
+        >
     </div>
-    
+
     <div class="collections-grid">
         {#each collections as collection}
-            <div 
-                class="collection-card" 
+            <div
+                class="collection-card"
                 role="button"
                 tabindex="0"
-                onclick={() => openCollection(collection.name)}
-                onkeydown={(e) => e.key === 'Enter' && openCollection(collection.name)}
+                onclick={() => openCollection(collection.id)}
+                onkeydown={(e) => e.key === "Enter" && openCollection(collection.id)}
             >
                 <h2>{collection.name}</h2>
+
+                <div class="times">
+                    <div>
+                        Created at: {new Date(
+                            collection.createdAt,
+                        ).toDateString()}
+                    </div>
+                    <div>
+                        Updated at: {new Date(
+                            collection.updatedAt,
+                        ).toDateString()}
+                    </div>
+                </div>
+
                 <div class="stats">
                     <div class="stat">
                         <span class="label">Fish</span>
@@ -64,13 +83,26 @@
                     </div>
                     <div class="stat">
                         <span class="label">Avg Weight</span>
-                        <span class="value">{collection.avgWeight.toFixed(1)}g</span>
+                        <span class="value"
+                            >{collection.avgWeight
+                                ? collection.avgWeight.toFixed(1) + "g"
+                                : "-"}</span
+                        >
                     </div>
                 </div>
             </div>
         {/each}
     </div>
 </main>
+
+{#if showModal}
+    <IntakeModal
+        bind:showModal
+        title="New Collection"
+        submitLabel="Create Collection"
+        onSubmit={createCollection}
+    />
+{/if}
 
 <style>
     main {
@@ -124,6 +156,11 @@
     .collection-card h2 {
         margin: 0 0 1rem 0;
         font-size: 1.25rem;
+    }
+
+    .times {
+        margin-bottom: 1rem;
+        margin-top: -0.5rem;
     }
 
     .stats {

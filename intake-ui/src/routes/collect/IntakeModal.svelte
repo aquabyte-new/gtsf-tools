@@ -1,10 +1,37 @@
 <script>
     import { samplingInfo } from "$lib/state.svelte.js";
 
-    let { showModal = $bindable() } = $props();
+    let {
+        showModal = $bindable(),
+        onSubmit = null,
+        title = "Edit Sampling Info",
+        submitLabel = "Done",
+    } = $props();
+    let submitError = $state("");
+    let isSubmitting = $state(false);
 
     function closeModal() {
         showModal = false;
+    }
+
+    async function handleSubmit(event) {
+        event.preventDefault();
+        submitError = "";
+
+        if (!onSubmit) {
+            closeModal();
+            return;
+        }
+
+        try {
+            isSubmitting = true;
+            await onSubmit();
+            closeModal();
+        } catch (error) {
+            submitError = error?.message || "Failed to save. Please try again.";
+        } finally {
+            isSubmitting = false;
+        }
     }
 </script>
 
@@ -22,14 +49,9 @@
         role="dialog"
         tabindex="-1"
     >
-        <h2>Edit Sampling Info</h2>
+        <h2>{title}</h2>
 
-        <form
-            onsubmit={(e) => {
-                e.preventDefault();
-                closeModal();
-            }}
-        >
+        <form onsubmit={handleSubmit}>
             <div class="form-group">
                 <label for="name">Name:</label>
                 <input type="text" id="name" bind:value={samplingInfo.name} />
@@ -65,9 +87,17 @@
                 ></textarea>
             </div>
 
+            {#if submitError}
+                <p class="form-error">{submitError}</p>
+            {/if}
+
             <div class="button-group">
-                <button type="submit">Done</button>
-                <button type="button" onclick={closeModal}>Cancel</button>
+                <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : submitLabel}
+                </button>
+                <button type="button" onclick={closeModal} disabled={isSubmitting}>
+                    Cancel
+                </button>
             </div>
         </form>
     </div>
@@ -138,6 +168,11 @@
         display: flex;
         gap: 0.75rem;
         margin-top: 1.5rem;
+    }
+
+    .form-error {
+        margin: 0.5rem 0 0;
+        color: #b00020;
     }
 
     button {

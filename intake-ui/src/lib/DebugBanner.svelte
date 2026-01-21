@@ -1,9 +1,14 @@
+<script>
+    let { dev = false } = $props();
+</script>
+
 <div class="banner">
+    {#if dev}
+        <div class="banner-title">DEVELOPMENT MODE</div>
+    {/if}
     <div>
-        Backend API: <a
-            href="{import.meta.env.VITE_API_URL}/docs"
-            target="_blank"
-        >
+        Backend API:
+        <a href="{import.meta.env.VITE_API_URL}/docs" target="_blank">
             {import.meta.env.VITE_API_URL}
         </a>
     </div>

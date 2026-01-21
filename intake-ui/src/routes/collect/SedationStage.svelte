@@ -10,7 +10,7 @@
 
     function toMeasurement() {
         const fish = stages.sedation;
-        fish.sedationEndTime = Date.now();
+        fish.sedationEnd = Date.now();
         stages.measurement = fish;
         stages.sedation = null;
     }
@@ -33,7 +33,7 @@
     {#if sedationStageActive()}
         <ActiveFish {iconIdx} />
         <div class="timer-container">
-            <Timer startTime={stages.sedation.cameraEndTime} />
+            <Timer startTime={stages.sedation.captureEnd} />
         </div>
 
         <div class="button-container">

@@ -1,11 +1,11 @@
 import { entries, samplingInfo } from "./state.svelte.js";
 
 // This is configured in .env.development and .env.production
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = `${import.meta.env.VITE_API_URL}/api`;
 
 
 const columns = [
-    "id",
+    "fishId",
     'penId',
     'species',
     'location',
@@ -13,10 +13,10 @@ const columns = [
     'length',
     'width',
     'breadth',
-    'cameraStartTime',
-    'cameraEndTime',
-    'sedationEndTime',
-    'measurementEndTime',
+    'captureStart',
+    'captureEnd',
+    'sedationEnd',
+    'measurementEnd',
     'notes',
     "collectionName",
 ]
@@ -26,11 +26,6 @@ const columnMap = {
     "length": "lengthMm",
     "width": "widthMm",
     "breadth": "breadthMm",
-    "cameraStartTime": "intakeStart",
-    "cameraEndTime": "intakeEnd",
-    "sedationEndTime": "sedationEnd",
-    "measurementEndTime": "measurementEnd",
-    "id": "fishId",
 }
 
 // Helper to escape CSV values
@@ -86,39 +81,50 @@ export function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
-export async function saveToBackend(quiet = false) {
-    if (entries.length === 0) {
-        alert("No data to save");
-        return;
+/**
+ * Save a single fish to the backend.
+ * @param {Object} fish - The fish data from the measurement stage
+ * @returns {Promise<boolean>} - True if save succeeded
+ */
+export async function saveFishToBackend(fish) {
+    const collectionId = samplingInfo.collectionId;
+    if (!collectionId) {
+        console.error('No collection ID set - cannot save fish');
+        alert('No collection selected. Please start a collection first.');
+        return false;
     }
 
-    // Prepare fish data with sampling info
-    const fish = entries.map((entry) => ({
-        ...entry,
-        penId: samplingInfo.penId,
-        location: samplingInfo.location,
-        species: samplingInfo.species
-    }));
+    const payload = {
+        fishId: fish.fishId,
+        weightG: parseFloat(fish.weightG),
+        lengthMm: parseFloat(fish.lengthMm),
+        widthMm: fish.widthMm ? parseFloat(fish.widthMm) : null,
+        breadthMm: fish.breadthMm ? parseFloat(fish.breadthMm) : null,
+        circumferenceMm: fish.circumferenceMm ? parseFloat(fish.circumferenceMm) : null,
+        captureStart: new Date(fish.captureStart).toISOString(),
+        captureEnd: new Date(fish.captureEnd).toISOString(),
+        sedationEnd: new Date(fish.sedationEnd).toISOString(),
+        measurementEnd: new Date(fish.measurementEnd).toISOString(),
+        notes: fish.notes || null,
+    };
 
     try {
-        const response = await fetch(`${apiUrl}/save`, {
+        const response = await fetch(`${apiUrl}/samples/${collectionId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                collectionName: samplingInfo.name,
-                fish: fish,
-            }),
+            body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            throw new Error(`HTTP ${response.status}: ${text}`);
         }
 
-        if (!quiet) {
-            alert(`Successfully saved ${entries.length} fish to backend`);
-        }
+        console.log(`Saved fish ${fish.fishId} to collection ${collectionId}`);
+        return true;
     } catch (error) {
-        console.error('Failed to save to backend:', error);
-        alert(`Failed to save to backend: ${error.message}`);
+        console.error('Failed to save fish:', error);
+        alert(`Failed to save fish: ${error.message}`);
+        return false;
     }
 }

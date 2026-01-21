@@ -12,7 +12,7 @@
   } from "$lib/validation.js";
   import ActiveFish from "$lib/ActiveFish.svelte";
   import BoardIcon from "$lib/assets/measuring-icon-2.jpeg";
-  import { saveToBackend } from "$lib/export.svelte.js";
+  import { saveFishToBackend } from "$lib/export.svelte.js";
 
   const activeFish = $derived(stages.measurement);
 
@@ -21,10 +21,13 @@
   let length = $state("");
   let width = $state("");
   let breadth = $state("");
+  let circumference = $state("");
   let notes = $state("");
 
+  let isSaving = $state(false);
+
   // submit entry and release fish
-  function log() {
+  async function log() {
     const check = (msg) => confirm(msg + ", are you sure you want to submit?");
     if (!isWeightValid(weight) && !check("Weight is unusual")) return;
     if (!isLengthValid(weight, length) && !check("Length is ususual")) return;
@@ -32,19 +35,29 @@
     if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual"))
       return;
 
-    stages.measurement = {
+    const completedFish = {
       ...stages.measurement,
-      measurementEndTime: Date.now(),
-      weight: weight,
-      length: length,
-      width: width,
-      breadth: breadth,
+      measurementEnd: Date.now(),
+      weightG: weight,
+      lengthMm: length,
+      widthMm: width,
+      breadthMm: breadth,
+      circumferenceMm: circumference,
       notes: notes,
     };
 
-    saveFish(stages.measurement);
+    // Save to backend first
+    isSaving = true;
+    const saved = await saveFishToBackend(completedFish);
+    isSaving = false;
 
-    saveToBackend(true);
+    if (!saved) {
+      // Backend save failed - don't update local state
+      return;
+    }
+
+    // Add to local entries for history/CSV export
+    saveFish(completedFish);
 
     stages.measurement = null;
 
@@ -74,7 +87,7 @@
   }
   const weightOk = $derived(isPosNum(weight));
   const lengthOk = $derived(isPosNum(length));
-  const canSubmit = $derived(weightOk && lengthOk);
+  const canSubmit = $derived(weightOk && lengthOk && !isSaving);
 </script>
 
 <div class="stage-container">
@@ -141,9 +154,9 @@
 
     <div class="button-container">
       <div>
-        <button class="stg-btn move" onclick={log} disabled={!canSubmit}
-          >Submit and release</button
-        >
+        <button class="stg-btn move" onclick={log} disabled={!canSubmit}>
+          {isSaving ? 'Saving...' : 'Submit and release'}
+        </button>
       </div>
       <div>
         <button class="stg-btn disgard" onclick={discard}>Discard</button>

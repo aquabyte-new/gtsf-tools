@@ -11,20 +11,9 @@
   <link rel="icon" href={favicon} />
 </svelte:head>
 
-<DebugBanner />
 
 {#if import.meta.env.DEV}
-  <div class="banner dev">
-    <div class="banner-title">DEVELOPMENT MODE</div>
-    <div>
-      Backend API: <a
-        href="{import.meta.env.VITE_API_URL}/docs"
-        target="_blank"
-      >
-        {import.meta.env.VITE_API_URL}
-      </a>
-    </div>
-  </div>
+  <DebugBanner dev={true} />
 {/if}
 
 {@render children?.()}

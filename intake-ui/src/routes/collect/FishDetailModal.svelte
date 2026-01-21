@@ -8,13 +8,17 @@
     isBreadthValid,
   } from "$lib/validation.js";
 
+  const apiUrl = `${import.meta.env.VITE_API_URL}/api`;
+
   let { fish = null, onClose } = $props();
 
   let isEditing = $state(false);
+  let isSaving = $state(false);
   let editedWeight = $state('');
   let editedLength = $state('');
   let editedWidth = $state('');
   let editedBreadth = $state('');
+  let editedNotes = $state('');
 
   // Validation state
   const weightValid = $derived(isWeightValid(editedWeight ? parseFloat(editedWeight) : null));
@@ -34,10 +38,11 @@
   // Initialize edit values when fish changes
   $effect(() => {
     if (fish) {
-      editedWeight = fish.weight?.toString() || '';
-      editedLength = fish.length?.toString() || '';
-      editedWidth = fish.width?.toString() || '';
-      editedBreadth = fish.breadth?.toString() || '';
+      editedWeight = fish.weightG?.toString() || '';
+      editedLength = fish.lengthMm?.toString() || '';
+      editedWidth = fish.widthMm?.toString() || '';
+      editedBreadth = fish.breadthMm?.toString() || '';
+      editedNotes = fish.notes || '';
     }
   });
 
@@ -73,17 +78,19 @@
   function cancelEditing() {
     isEditing = false;
     // Reset to original values
-    editedWeight = fish.weight?.toString() || '';
-    editedLength = fish.length?.toString() || '';
-    editedWidth = fish.width?.toString() || '';
-    editedBreadth = fish.breadth?.toString() || '';
+    editedWeight = fish.weightG?.toString() || '';
+    editedLength = fish.lengthMm?.toString() || '';
+    editedWidth = fish.widthMm?.toString() || '';
+    editedBreadth = fish.breadthMm?.toString() || '';
+    editedNotes = fish.notes || '';
   }
 
-  function saveChanges() {
+  async function saveChanges() {
     const weight = editedWeight ? parseFloat(editedWeight) : null;
     const length = editedLength ? parseFloat(editedLength) : null;
     const width = editedWidth ? parseFloat(editedWidth) : null;
     const breadth = editedBreadth ? parseFloat(editedBreadth) : null;
+    const notes = editedNotes || null;
 
     // Validation with confirmation dialogs (same as MeasurementStage)
     const check = (msg) => confirm(msg + ", are you sure you want to save?");
@@ -92,22 +99,54 @@
     if (!isWidthValid(weight, width) && !check("Width is unusual")) return;
     if (!isBreadthValid(weight, breadth) && !check("Breadth is unusual")) return;
 
-    // Find the fish in entries and update it
-    const fishIndex = entries.findIndex(f => f.id === fish.id);
+    // Save to backend
+    const collectionId = samplingInfo.collectionId;
+    if (collectionId) {
+      isSaving = true;
+      try {
+        const response = await fetch(`${apiUrl}/samples/${collectionId}/${fish.fishId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weightG: weight,
+            lengthMm: length,
+            widthMm: width,
+            breadthMm: breadth,
+            notes: notes
+          }),
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+      } catch (error) {
+        console.error('Failed to update fish:', error);
+        alert(`Failed to update fish: ${error.message}`);
+        isSaving = false;
+        return;
+      }
+      isSaving = false;
+    }
+
+    // Update local state
+    const fishIndex = entries.findIndex(f => f.fishId === fish.fishId);
     if (fishIndex !== -1) {
       entries[fishIndex] = {
         ...entries[fishIndex],
-        weight: weight,
-        length: length,
-        width: width,
-        breadth: breadth
+        weightG: weight,
+        lengthMm: length,
+        widthMm: width,
+        breadthMm: breadth,
+        notes: notes
       };
       
       // Update the fish prop reference
-      fish.weight = weight;
-      fish.length = length;
-      fish.width = width;
-      fish.breadth = breadth;
+      fish.weightG = weight;
+      fish.lengthMm = length;
+      fish.widthMm = width;
+      fish.breadthMm = breadth;
+      fish.notes = notes;
     }
     
     isEditing = false;
@@ -127,19 +166,39 @@
       <div class="modal-body">
         <div class="detail-section">
           <div class="fish-icon-display">
-            <FishIcon iconIdx={fish.iconIdx} size="4rem" weight={fish.weight}/>
+            <FishIcon iconIdx={fish.iconIdx} size="4rem" weight={fish.weightG}/>
           </div>
         </div>
 
         <div class="detail-section">
-          <h3>Identity</h3>
+          <div class="section-header">
+            <h3>Identity</h3>
+            {#if !isEditing}
+              <button class="edit-button" onclick={startEditing}>Edit</button>
+            {/if}
+          </div>
           <div class="detail-row">
             <span class="label">Fish ID:</span>
-            <span class="value">{fish.id}</span>
+            <span class="value">{fish.fishId}</span>
           </div>
           <div class="detail-row">
             <span class="label">Species:</span>
             <span class="value">{samplingInfo.species}</span>
+          </div>
+          <div class="detail-row notes-row-display">
+            <span class="label">Notes:</span>
+            {#if isEditing}
+              <textarea 
+                id="notes-input"
+                bind:value={editedNotes} 
+                class="edit-textarea"
+                placeholder="Add any notes"
+              ></textarea>
+            {:else if fish.notes}
+              <span class="value notes-value">{fish.notes}</span>
+            {:else}
+              <span class="value notes-empty">No notes</span>
+            {/if}
           </div>
         </div>
 
@@ -202,26 +261,28 @@
                 />
               </div>
               <div class="edit-actions">
-                <button class="save-button" onclick={saveChanges}>Save</button>
-                <button class="cancel-button" onclick={cancelEditing}>Cancel</button>
+                <button class="save-button" onclick={saveChanges} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                <button class="cancel-button" onclick={cancelEditing} disabled={isSaving}>Cancel</button>
               </div>
             </div>
           {:else}
             <div class="detail-row">
               <span class="label">Weight:</span>
-              <span class="value">{fish.weight ?? "N/A"} {fish.weight ? "g" : ""}</span>
+              <span class="value">{fish.weightG ?? "N/A"} {fish.weightG ? "g" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Length:</span>
-              <span class="value">{fish.length ?? "N/A"} {fish.length ? "mm" : ""}</span>
+              <span class="value">{fish.lengthMm ?? "N/A"} {fish.lengthMm ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Width:</span>
-              <span class="value">{fish.width ?? "N/A"} {fish.width ? "mm" : ""}</span>
+              <span class="value">{fish.widthMm ?? "N/A"} {fish.widthMm ? "mm" : ""}</span>
             </div>
             <div class="detail-row">
               <span class="label">Breadth:</span>
-              <span class="value">{fish.breadth ?? "N/A"} {fish.breadth ? "mm" : ""}</span>
+              <span class="value">{fish.breadthMm ?? "N/A"} {fish.breadthMm ? "mm" : ""}</span>
             </div>
           {/if}
         </div>
@@ -232,15 +293,15 @@
             <div class="timeline-labels">
               <div class="stage-label">
                 <span class="label-name">Camera</span>
-                <span class="label-duration">{formatDuration(fish.cameraStartTime, fish.cameraEndTime)}</span>
+                <span class="label-duration">{formatDuration(fish.captureStart, fish.captureEnd)}</span>
               </div>
               <div class="stage-label">
                 <span class="label-name">Sedation</span>
-                <span class="label-duration">{formatDuration(fish.cameraEndTime, fish.sedationEndTime)}</span>
+                <span class="label-duration">{formatDuration(fish.captureEnd, fish.sedationEnd)}</span>
               </div>
               <div class="stage-label">
                 <span class="label-name">Measurement</span>
-                <span class="label-duration">{formatDuration(fish.sedationEndTime, fish.measurementEndTime)}</span>
+                <span class="label-duration">{formatDuration(fish.sedationEnd, fish.measurementEnd)}</span>
               </div>
             </div>
             
@@ -251,20 +312,14 @@
             </div>
             
             <div class="timeline-times">
-              <span class="time-marker">{formatTime(fish.cameraStartTime)}</span>
-              <span class="time-marker">{formatTime(fish.cameraEndTime)}</span>
-              <span class="time-marker">{formatTime(fish.sedationEndTime)}</span>
-              <span class="time-marker">{formatTime(fish.measurementEndTime)}</span>
+              <span class="time-marker">{formatTime(fish.captureStart)}</span>
+              <span class="time-marker">{formatTime(fish.captureEnd)}</span>
+              <span class="time-marker">{formatTime(fish.sedationEnd)}</span>
+              <span class="time-marker">{formatTime(fish.measurementEnd)}</span>
             </div>
           </div>
         </div>
 
-        {#if fish.notes}
-          <div class="detail-section">
-            <h3>Notes</h3>
-            <div class="notes-content">{fish.notes}</div>
-          </div>
-        {/if}
       </div>
     </div>
   </div>
@@ -359,11 +414,23 @@
     color: #333;
   }
 
-  .notes-content {
-    padding: 0.75rem;
-    background-color: #f8f9fa;
-    border-radius: 4px;
+  .notes-row-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .notes-row-display .edit-textarea {
+    width: 100%;
+  }
+
+  .notes-value {
     white-space: pre-wrap;
+  }
+
+  .notes-empty {
+    color: #999;
+    font-style: italic;
   }
 
   .fish-icon-display {
@@ -495,6 +562,23 @@
 
   .edit-input.invalid {
     border-color: #ff4444;
+  }
+
+  .edit-textarea {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-height: 4rem;
+    resize: vertical;
+    font-family: inherit;
+  }
+
+  .edit-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
   }
 
   .edit-actions {
