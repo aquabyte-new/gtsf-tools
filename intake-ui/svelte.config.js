@@ -4,7 +4,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	compilerOptions: { runes: true },
-	kit: { adapter: adapter() },
+	kit: { adapter: adapter({ fallback: 'index.html' }) },
 };
 
 export default config;
