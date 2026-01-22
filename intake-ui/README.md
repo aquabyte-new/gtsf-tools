@@ -13,3 +13,6 @@ This repo uses [Svelte](https://svelte.dev/docs/svelte/overview) and [SvelteKit]
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+
+# Deployment
+Run `just release` to deploy the latest static app to the `internal-tools` EC2.
