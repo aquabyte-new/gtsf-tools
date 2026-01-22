@@ -23,7 +23,7 @@ class Database:
         
         if env == "production":
             logger.info("Production mode: fetching DSN from SSM...")
-            dsn = get_dsn_from_ssm("/dsn/fishfact/user_sam")
+            dsn = get_dsn_from_ssm("/dsn/fishfact/service_gtsf_intake")
             logger.info("Connecting to PostgreSQL database...")
             self.pool = await asyncpg.create_pool(
                 dsn=dsn,
